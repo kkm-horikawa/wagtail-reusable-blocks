@@ -284,6 +284,61 @@ wagtail-reusable-blocks/
 └── CONTRIBUTING.md
 ```
 
+## Branch Strategy
+
+We use a modified Git Flow strategy:
+
+```mermaid
+gitGraph
+    commit id: "initial"
+    branch develop
+    checkout develop
+    commit id: "dev-1"
+    branch feature/issue-1
+    checkout feature/issue-1
+    commit id: "feat-1"
+    commit id: "feat-2"
+    checkout develop
+    merge feature/issue-1 id: "merge-feat"
+    branch fix/issue-5
+    checkout fix/issue-5
+    commit id: "fix-1"
+    checkout develop
+    merge fix/issue-5 id: "merge-fix"
+    checkout main
+    merge develop id: "release v0.1.0" tag: "v0.1.0"
+```
+
+### Branch Types
+
+| Branch | Purpose | Base | Merge To |
+|--------|---------|------|----------|
+| `main` | Production releases | - | - |
+| `develop` | Development integration | `main` | `main` |
+| `feature/*` | New features | `develop` | `develop` |
+| `fix/*` | Bug fixes | `develop` | `develop` |
+| `hotfix/*` | Urgent production fixes | `main` | `main` + `develop` |
+
+### Branch Naming
+
+```
+feature/<issue-number>-<short-description>
+fix/<issue-number>-<short-description>
+hotfix/<issue-number>-<short-description>
+```
+
+Examples:
+- `feature/1-reusable-block-model`
+- `fix/12-circular-reference-detection`
+- `hotfix/15-security-patch`
+
+### Protected Branches
+
+| Branch | Direct Push | PR Required | Delete Protection |
+|--------|-------------|-------------|-------------------|
+| `main` | No | Yes | Yes |
+| `develop` | No | Yes | Yes |
+
 ## Development Workflow
 
 ### 1. Check Existing Issues
@@ -293,9 +348,14 @@ Before starting work, check the [Issue Tracker](https://github.com/kkm-horikawa/
 ### 2. Create a Branch
 
 ```bash
-git checkout -b feature/your-feature-name
+# Start from develop
+git checkout develop
+git pull origin develop
+
+# Create feature or fix branch
+git checkout -b feature/<issue-number>-<description>
 # or
-git checkout -b fix/your-fix-name
+git checkout -b fix/<issue-number>-<description>
 ```
 
 ### 3. Make Changes
@@ -325,10 +385,17 @@ git commit -m "docs: update installation guide"
 ### 6. Push and Create PR
 
 ```bash
-git push origin feature/your-feature-name
+git push origin feature/<issue-number>-<description>
 ```
 
-Then create a Pull Request on GitHub.
+Then create a Pull Request **to `develop`** on GitHub.
+
+### 7. Release Process
+
+When ready to release:
+1. Create PR from `develop` to `main`
+2. After merge, tag the release: `git tag v0.x.0`
+3. Push tag: `git push origin v0.x.0`
 
 ## Milestones and Roadmap
 

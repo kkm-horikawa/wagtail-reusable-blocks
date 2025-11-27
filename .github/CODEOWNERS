@@ -1,0 +1,17 @@
+# CODEOWNERS - Define code ownership for review requirements
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for all files
+* @kkm-horikawa
+
+# Core source code
+/src/ @kkm-horikawa
+
+# Documentation
+/docs/ @kkm-horikawa
+README.md @kkm-horikawa
+CONTRIBUTING.md @kkm-horikawa
+
+# Configuration files
+pyproject.toml @kkm-horikawa
+.github/ @kkm-horikawa
