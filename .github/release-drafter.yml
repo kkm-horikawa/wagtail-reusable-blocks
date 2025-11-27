@@ -46,6 +46,8 @@ autolabeler:
     files:
       - "*.md"
       - "docs/**/*"
+    branch:
+      - "/docs\\/.+/"
   - label: "bug"
     branch:
       - "/fix\\/.+/"
@@ -54,6 +56,9 @@ autolabeler:
     branch:
       - "/feat\\/.+/"
       - "/feature\\/.+/"
+  - label: "automation"
+    branch:
+      - "/chore\\/.+/"
 
 template: |
   ## What's Changed
