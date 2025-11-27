@@ -318,6 +318,8 @@ gitGraph
 | `feature/*` | New features | `develop` | `develop` |
 | `fix/*` | Bug fixes | `develop` | `develop` |
 | `hotfix/*` | Urgent production fixes | `main` | `main` + `develop` |
+| `chore/*` | Maintenance, config, dependencies | `develop` | `develop` |
+| `docs/*` | Documentation updates | `develop` | `develop` |
 
 ### Branch Naming
 
@@ -325,12 +327,16 @@ gitGraph
 feature/<issue-number>-<short-description>
 fix/<issue-number>-<short-description>
 hotfix/<issue-number>-<short-description>
+chore/<short-description>
+docs/<short-description>
 ```
 
 Examples:
 - `feature/1-reusable-block-model`
 - `fix/12-circular-reference-detection`
 - `hotfix/15-security-patch`
+- `chore/update-dependencies`
+- `docs/api-reference`
 
 ### Protected Branches
 
