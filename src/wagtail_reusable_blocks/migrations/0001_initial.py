@@ -5,28 +5,60 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ReusableBlock',
+            name="ReusableBlock",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Human-readable name for this reusable block', max_length=255)),
-                ('slug', models.SlugField(help_text='URL-safe identifier, auto-generated from name', max_length=255, unique=True)),
-                ('content', wagtail.fields.StreamField([('rich_text', 0), ('raw_html', 1)], blank=True, block_lookup={0: ('wagtail.blocks.RichTextBlock', (), {}), 1: ('wagtail.blocks.RawHTMLBlock', (), {})}, help_text='The content of this reusable block')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Human-readable name for this reusable block",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "slug",
+                    models.SlugField(
+                        help_text="URL-safe identifier, auto-generated from name",
+                        max_length=255,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "content",
+                    wagtail.fields.StreamField(
+                        [("rich_text", 0), ("raw_html", 1)],
+                        blank=True,
+                        block_lookup={
+                            0: ("wagtail.blocks.RichTextBlock", (), {}),
+                            1: ("wagtail.blocks.RawHTMLBlock", (), {}),
+                        },
+                        help_text="The content of this reusable block",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': 'Reusable Block',
-                'verbose_name_plural': 'Reusable Blocks',
-                'ordering': ['-updated_at'],
-                'indexes': [models.Index(fields=['slug'], name='wagtail_reu_slug_51c1a2_idx')],
+                "verbose_name": "Reusable Block",
+                "verbose_name_plural": "Reusable Blocks",
+                "ordering": ["-updated_at"],
+                "indexes": [
+                    models.Index(fields=["slug"], name="wagtail_reu_slug_51c1a2_idx")
+                ],
             },
         ),
     ]

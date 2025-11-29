@@ -42,7 +42,10 @@ class TestGetSetting:
             # Custom value
             assert get_setting("TEMPLATE") == "custom.html"
             # Default value for unconfigured key
-            assert get_setting("REGISTER_DEFAULT_SNIPPET") == DEFAULTS["REGISTER_DEFAULT_SNIPPET"]
+            assert (
+                get_setting("REGISTER_DEFAULT_SNIPPET")
+                == DEFAULTS["REGISTER_DEFAULT_SNIPPET"]
+            )
 
 
 class TestAppConfigValidation:
