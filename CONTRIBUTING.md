@@ -102,6 +102,111 @@ This matches the CI matrix exactly, allowing you to verify compatibility before 
 
 **Note:** Tox will create virtual environments for each combination. The first run will be slow, but subsequent runs are faster due to caching.
 
+## Supported Versions
+
+### Python Versions
+- **3.10** (minimum)
+- **3.11**
+- **3.12**
+- **3.13**
+- **3.14** (latest)
+
+### Django Versions
+- **4.2** (LTS - Long Term Support until April 2026)
+- **5.1**
+- **5.2** (LTS - Long Term Support until April 2028)
+
+### Wagtail Versions
+- **5.2** (LTS - Long Term Support)
+- **6.4**
+- **7.0** (LTS - Long Term Support)
+- **7.2** (latest)
+
+## Version Compatibility Matrix
+
+Our CI tests 39 valid combinations of Python, Django, and Wagtail versions.
+
+### Compatibility Table
+
+| Python | Django 4.2 | Django 5.1 | Django 5.2 |
+|--------|------------|------------|------------|
+| **Wagtail 5.2** ||||
+| 3.10 | ✅ | ❌ | ❌ |
+| 3.11 | ✅ | ❌ | ❌ |
+| 3.12 | ✅ | ❌ | ❌ |
+| 3.13 | ✅ | ❌ | ❌ |
+| 3.14 | ❌ | ❌ | ❌ |
+| **Wagtail 6.4** ||||
+| 3.10 | ✅ | ✅ | ❌ |
+| 3.11 | ✅ | ✅ | ✅ |
+| 3.12 | ✅ | ✅ | ✅ |
+| 3.13 | ✅ | ✅ | ✅ |
+| 3.14 | ❌ | ❌ | ❌ |
+| **Wagtail 7.0** ||||
+| 3.10 | ✅ | ✅ | ❌ |
+| 3.11 | ✅ | ✅ | ✅ |
+| 3.12 | ✅ | ✅ | ✅ |
+| 3.13 | ✅ | ✅ | ✅ |
+| 3.14 | ❌ | ❌ | ❌ |
+| **Wagtail 7.2** ||||
+| 3.10 | ✅ | ✅ | ❌ |
+| 3.11 | ✅ | ✅ | ✅ |
+| 3.12 | ✅ | ✅ | ✅ |
+| 3.13 | ✅ | ✅ | ✅ |
+| 3.14 | ❌ | ❌ | ✅ |
+
+**Summary:**
+- **Total combinations**: 60 (5 Python × 3 Django × 4 Wagtail)
+- **Valid combinations**: 39 (tested in CI)
+- **Excluded combinations**: 21
+
+### Exclusion Rationale
+
+Certain combinations are excluded due to compatibility constraints:
+
+1. **Python 3.10 + Django 5.2**: Django 5.2 requires Python 3.11+
+2. **Wagtail 5.2 + Django 5.1/5.2**: Wagtail 5.2 only supports Django up to 4.2
+3. **Python 3.14 + Django 4.2/5.1**: Python 3.14 is only supported by Django 5.2+
+4. **Python 3.14 + Wagtail 5.2/6.4/7.0**: Python 3.14 is only supported by Wagtail 7.2+
+
+These exclusions are based on official compatibility tables:
+- [Django FAQ: Installation](https://docs.djangoproject.com/en/stable/faq/install/)
+- [Wagtail Upgrading Guide](https://docs.wagtail.org/en/stable/releases/upgrading.html)
+
+## Test Matrix Strategy
+
+### CI Workflow
+Our GitHub Actions CI tests all 39 valid combinations in parallel, ensuring compatibility across:
+- All supported Python versions
+- All supported Django versions
+- All supported Wagtail versions
+
+See `.github/workflows/ci.yml` for the complete matrix configuration.
+
+### Local Testing with tox
+Use `tox` to replicate the CI matrix locally before pushing:
+
+```bash
+# Test all 39 combinations
+tox
+
+# Test specific Python version
+tox -e py314
+
+# Test specific combination
+tox -e py314-django52-wagtail72
+```
+
+### Why No `uv.lock`?
+
+This is a **library project**, not an application. We intentionally don't commit `uv.lock` to:
+
+- Allow downstream users to resolve dependencies based on their own constraints
+- Maintain maximum compatibility across different environments
+- Avoid forcing specific transitive dependency versions
+
+Applications should use lock files for reproducible builds. Libraries should not.
+
 ### Code Style
 
 ```bash
