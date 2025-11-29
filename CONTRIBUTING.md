@@ -6,8 +6,40 @@ Thank you for your interest in contributing!
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.10+ (for basic development)
+- **Python 3.10, 3.11, 3.12, 3.13, 3.14** (for full matrix testing with tox)
 - uv (recommended) or pip
+
+#### Installing Multiple Python Versions
+
+For full matrix testing, you'll need all supported Python versions installed.
+
+**Using uv (recommended):**
+```bash
+# Install all supported Python versions
+uv python install 3.10 3.11 3.12 3.13 3.14
+
+# Verify installations
+uv python list
+```
+
+> **Note:** Python 3.14 may be in alpha/beta during development. If you encounter stability issues with Python 3.14 tests (e.g., segmentation faults), this is expected for pre-release versions. The CI workflow tests against the stable release.
+
+**Alternative: Using pyenv:**
+```bash
+# Install pyenv
+curl https://pyenv.run | bash
+
+# Install all supported Python versions
+pyenv install 3.10.16
+pyenv install 3.11.11
+pyenv install 3.12.8
+pyenv install 3.13.1
+pyenv install 3.14.0
+
+# Make them available globally
+pyenv global 3.13.1 3.10.16 3.11.11 3.12.8 3.14.0
+```
 
 ### Clone and Setup
 
@@ -35,6 +67,37 @@ pip install -e ".[dev]"
 ```bash
 pytest
 ```
+
+### Running Matrix Tests Locally
+
+To test against all supported Python/Django/Wagtail combinations (39 total):
+
+```bash
+# Install tox
+uv pip install tox
+
+# Run all 39 combinations
+tox
+
+# Test specific Python version (all Django/Wagtail combinations)
+tox -e py314
+
+# Test specific combination
+tox -e py314-django52-wagtail72
+
+# Run in parallel (faster)
+tox -p auto
+
+# Pass pytest arguments
+tox -- -k test_specific
+
+# List all available environments
+tox -l
+```
+
+This matches the CI matrix exactly, allowing you to verify compatibility before pushing.
+
+**Note:** Tox will create virtual environments for each combination. The first run will be slow, but subsequent runs are faster due to caching.
 
 ### Code Style
 
