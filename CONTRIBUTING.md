@@ -372,9 +372,15 @@ Examples:
 
 ### For Maintainers (Direct)
 
+We recommend using **Draft PRs** for planning and early feedback.
+
 #### 1. Check Existing Issues
 
 Before starting work, check the [Issue Tracker](https://github.com/kkm-horikawa/wagtail-reusable-blocks/issues) and [Project Board](https://github.com/users/kkm-horikawa/projects/6).
+
+- Search for existing issues to avoid duplication
+- Comment on the issue to claim it
+- If no issue exists, create one first
 
 #### 2. Create a Branch
 
@@ -389,21 +395,57 @@ git checkout -b feature/<issue-number>-<description>
 git checkout -b fix/<issue-number>-<description>
 ```
 
-#### 3. Make Changes
+#### 3. Create a Draft PR (Recommended)
 
+Creating a Draft PR **before implementing** provides several benefits:
+
+- **Early feedback**: Get architectural guidance before investing time
+- **Avoid rework**: Catch potential issues early
+- **Communication**: Team knows what you're working on
+- **Planning**: Forces you to think through the approach
+- **Progress tracking**: Can commit work-in-progress safely
+
+```bash
+# Create an empty commit to initialize the PR
+git commit --allow-empty -m "feat: initialize <feature name>
+
+Track progress for #<issue-number>"
+
+# Push and create Draft PR
+git push -u origin feature/<issue-number>-<description>
+```
+
+Then create a **Draft Pull Request** on GitHub with:
+
+- Reference: `Closes #<issue-number>`
+- Implementation plan as checkboxes:
+  ```markdown
+  ## Implementation Plan
+  - [ ] Create model
+  - [ ] Add admin interface
+  - [ ] Write tests
+  - [ ] Update documentation
+  ```
+- Test strategy outline
+
+#### 4. Implement
+
+- Follow the plan in your Draft PR
 - Write tests for new functionality
 - Follow existing code style
-- Update documentation if needed
+- Commit regularly with clear messages
+- Update PR checkboxes as you progress
 
-#### 4. Test Your Changes
+#### 5. Test Your Changes
 
 ```bash
 pytest
 ruff check .
 ruff format --check .
+mypy src/
 ```
 
-#### 5. Commit
+#### 6. Commit
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -413,13 +455,25 @@ git commit -m "fix: resolve circular reference detection"
 git commit -m "docs: update installation guide"
 ```
 
-#### 6. Push and Create PR
+#### 7. Mark PR as Ready for Review
 
-```bash
-git push origin feature/<issue-number>-<description>
-```
+When implementation is complete:
 
-Then create a Pull Request **to `develop`** on GitHub.
+- Ensure all tests pass locally
+- Update documentation if needed
+- Mark PR as "Ready for review"
+
+#### 8. Self-Review and Merge
+
+For **maintainers and core contributors**:
+
+- You may approve and merge your own PRs if:
+  - All CI checks pass
+  - The change is well-documented
+  - Tests are included
+  - The PR has been open for reasonable time (for feedback)
+
+Use admin privileges to bypass approval requirements when appropriate.
 
 ### Release Process (Maintainers only)
 
@@ -427,6 +481,114 @@ When ready to release:
 1. Create PR from `develop` to `main`
 2. After merge, tag the release: `git tag v0.x.0`
 3. Push tag: `git push origin v0.x.0`
+
+## Project Management
+
+### Our Philosophy
+
+This is an **open-source project built by volunteers**. Our management approach reflects this:
+
+- ✅ **No time estimates or strict deadlines** - Contributors work at their own pace
+- ✅ **Quality over speed** - We'd rather ship it right than ship it fast
+- ✅ **Clear issue descriptions** - Every issue has acceptance criteria
+- ✅ **Transparent dependencies** - We use parent/child and blocked-by relationships
+- ✅ **Version-based milestones** - Group features by version, not by date
+
+### Labels
+
+We use labels to categorize and prioritize work:
+
+| Label | Meaning | When to Use |
+|-------|---------|-------------|
+| `good first issue` | Great for newcomers | Small, well-defined tasks |
+| `priority:critical` | Requires immediate attention | Security, data loss, blocks other work |
+| `priority:high` | Important, affects multiple people | Features needed by many, impactful bugs |
+| `priority:medium` | Normal priority | Default for most issues |
+| `priority:low` | Nice to have | Future improvements, minor enhancements |
+| `atomic` | Small, focused issue | No sub-issues needed, single PR |
+| `parent` | Has sub-issues | Large task broken into smaller pieces |
+| `child` | Sub-issue of a parent | Part of a larger task |
+| `enhancement` | New feature or improvement | Adding functionality |
+| `bug` | Something isn't working | Fixing broken behavior |
+| `documentation` | Documentation improvements | README, guides, comments |
+
+### Issue Relationships
+
+We use GitHub's issue relationship features to show dependencies and task decomposition.
+
+#### Parent/Child Relationships (Sub-issues)
+
+Use when breaking large work into smaller, manageable tasks:
+
+```bash
+# Example: Set Issue #24 as a sub-issue of Issue #10
+PARENT_ID=$(gh issue view 10 --json id --jq ".id")
+CHILD_ID=$(gh issue view 24 --json id --jq ".id")
+gh api graphql -H "GraphQL-Features: sub_issues" -f query='
+mutation($parentId: ID!, $childId: ID!) {
+  addSubIssue(input: { issueId: $parentId, subIssueId: $childId }) {
+    issue { title number }
+    subIssue { title number }
+  }
+}' -f parentId="$PARENT_ID" -f childId="$CHILD_ID"
+```
+
+**When to create sub-issues:**
+- Task is too large for one PR
+- Work can be parallelized among contributors
+- Clear logical decomposition exists
+
+**When NOT to create sub-issues:**
+- Small, atomic tasks (use `atomic` label)
+- Tasks that are naturally sequential
+
+#### Blocked By Relationships
+
+Use when an issue depends on another issue to be completed first:
+
+```bash
+# Example: Mark Issue #21 as blocked by Issue #10
+ISSUE_ID=$(gh issue view 21 --json id --jq ".id")
+BLOCKING_ID=$(gh issue view 10 --json id --jq ".id")
+gh api graphql -H "GraphQL-Features: issue_types" -f query='
+mutation($issueId: ID!, $blockingIssueId: ID!) {
+  addBlockedBy(input: { issueId: $issueId, blockingIssueId: $blockingIssueId }) {
+    issue { title number }
+    blockingIssue { title number }
+  }
+}' -f issueId="$ISSUE_ID" -f blockingIssueId="$BLOCKING_ID"
+```
+
+### GitHub Projects
+
+We use [GitHub Projects](https://github.com/users/kkm-horikawa/projects/6) to track progress:
+
+| Status | Meaning |
+|--------|---------|
+| **Todo** | Ready to work on |
+| **In Progress** | Actively being worked on |
+| **Done** | Completed and merged |
+
+Contributors can move their assigned issues through the board as they progress.
+
+### Why No Time Tracking?
+
+Unlike commercial software projects, we don't track:
+- Story points
+- Time estimates
+- Sprint deadlines
+- Velocity
+
+**Reasons:**
+- OSS contributors are volunteers with varying availability
+- Forcing deadlines creates unnecessary pressure
+- Quality and correctness matter more than speed
+- Contributors work at their own pace
+
+Instead, we focus on:
+- **What** needs to be done (clear acceptance criteria)
+- **Why** it's important (context and motivation)
+- **How** it relates to other work (dependencies)
 
 ## Milestones and Roadmap
 
