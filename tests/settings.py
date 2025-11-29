@@ -15,7 +15,7 @@ SECRET_KEY = "test-secret-key-not-for-production"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 # Application definition
 INSTALLED_APPS = [
@@ -80,7 +80,7 @@ DATABASES = {
 }
 
 # Password validation
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = []
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
