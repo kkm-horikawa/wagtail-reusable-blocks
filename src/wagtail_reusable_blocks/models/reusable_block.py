@@ -8,42 +8,61 @@ from wagtail.fields import StreamField
 
 
 class ReusableBlock(models.Model):
-    """Base model for reusable content blocks that can be used across multiple pages.
+    """Reusable content blocks that can be used across multiple pages.
 
-    This is an abstract-like base model that should be inherited and registered
-    as a Wagtail Snippet in your project. It provides basic fields and functionality,
-    with default RichTextBlock and RawHTMLBlock content types.
+    By default, this model is automatically registered as a Wagtail Snippet
+    and ready to use immediately after installation. The default includes
+    RichTextBlock and RawHTMLBlock.
 
-    Basic Usage:
-        from wagtail.snippets.models import register_snippet
-        from wagtail_reusable_blocks.models import ReusableBlock
+    Quick Start (No Code Required):
+        1. Add 'wagtail_reusable_blocks' to INSTALLED_APPS
+        2. Run migrations: python manage.py migrate
+        3. Access "Reusable Blocks" in Wagtail admin
 
-        @register_snippet
-        class MyReusableBlock(ReusableBlock):
-            class Meta(ReusableBlock.Meta):
-                verbose_name = "My Reusable Block"
+    Adding Custom Block Types:
+        To add more block types (e.g., images, videos), create your own model:
 
-    Custom Block Types:
-        from wagtail.blocks import CharBlock, ImageChooserBlock
+        from wagtail.blocks import CharBlock, ImageChooserBlock, RichTextBlock, RawHTMLBlock
         from wagtail.fields import StreamField
         from wagtail.snippets.models import register_snippet
         from wagtail_reusable_blocks.models import ReusableBlock
 
         @register_snippet
         class CustomReusableBlock(ReusableBlock):
+            # Override content field with additional block types
             content = StreamField([
-                ('heading', CharBlock()),
-                ('paragraph', RichTextBlock()),
-                ('image', ImageChooserBlock()),
+                ('rich_text', RichTextBlock()),      # Keep defaults
+                ('raw_html', RawHTMLBlock()),        # Keep defaults
+                ('image', ImageChooserBlock()),      # Add image support
+                ('heading', CharBlock()),            # Add heading support
             ], use_json_field=True, blank=True)
 
             class Meta(ReusableBlock.Meta):
-                verbose_name = "Custom Reusable Block"
+                verbose_name = "Reusable Block"
+                verbose_name_plural = "Reusable Blocks"
+
+        # Disable the default snippet to avoid duplicates
+        WAGTAIL_REUSABLE_BLOCKS = {
+            'REGISTER_DEFAULT_SNIPPET': False,
+        }
+
+    Completely Custom Block:
+        For specialized use cases, create a completely different block:
+
+        @register_snippet
+        class HeaderBlock(ReusableBlock):
+            content = StreamField([
+                ('heading', CharBlock()),
+                ('subheading', CharBlock(required=False)),
+            ], use_json_field=True, blank=True)
+
+            class Meta(ReusableBlock.Meta):
+                verbose_name = "Header Block"
 
     Attributes:
         name: Human-readable identifier for the block.
         slug: URL-safe unique identifier, auto-generated from name.
-        content: StreamField containing the block content.
+        content: StreamField containing the block content (RichTextBlock and RawHTMLBlock by default).
         created_at: Timestamp when the block was created.
         updated_at: Timestamp when the block was last updated.
     """

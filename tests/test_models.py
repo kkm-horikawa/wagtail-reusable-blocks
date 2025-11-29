@@ -4,20 +4,8 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
-from wagtail.snippets.models import register_snippet
 
 from wagtail_reusable_blocks.models import ReusableBlock
-
-
-# Snippet-registered model for testing
-@register_snippet
-class SampleReusableBlock(ReusableBlock):
-    """Sample model for testing ReusableBlock functionality."""
-
-    class Meta:
-        proxy = True
-        app_label = "wagtail_reusable_blocks"
-        verbose_name = "Sample Reusable Block"
 
 
 class TestReusableBlockCreation:

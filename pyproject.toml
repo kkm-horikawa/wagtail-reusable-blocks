@@ -103,6 +103,7 @@ python_version = "3.10"
 plugins = ["mypy_django_plugin.main"]
 strict = true
 warn_unreachable = true
+exclude = ["tests/"]
 
 [[tool.mypy.overrides]]
 module = ["wagtail.*"]
