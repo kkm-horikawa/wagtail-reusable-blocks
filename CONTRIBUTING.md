@@ -26,6 +26,10 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+> **Note:** We use `uv pip install` instead of `uv sync` because this is a **library project**.
+> We don't commit `uv.lock` to maintain dependency flexibility for downstream users.
+> See [Project Management](#project-management) for more details.
+
 ### Running Tests
 
 ```bash
