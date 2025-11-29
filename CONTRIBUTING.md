@@ -8,7 +8,10 @@ Thank you for your interest in contributing!
 
 - Python 3.10+ (for basic development)
 - **Python 3.10, 3.11, 3.12, 3.13, 3.14** (for full matrix testing with tox)
-- uv (recommended) or pip
+- **uv 0.9.0+** (recommended) or pip
+  - For Python 3.14 support, uv 0.9.0 or later is required
+  - Check version: `uv --version`
+  - Update: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 #### Installing Multiple Python Versions
 
