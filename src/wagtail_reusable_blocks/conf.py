@@ -3,15 +3,11 @@
 from typing import Any
 
 from django.conf import settings
-from wagtail.blocks import RawHTMLBlock, RichTextBlock
 
 # Default settings
 DEFAULTS = {
-    "BLOCK_TYPES": [
-        ("rich_text", RichTextBlock()),
-        ("raw_html", RawHTMLBlock()),
-    ],
     "TEMPLATE": "wagtail_reusable_blocks/reusable_block.html",
+    "REGISTER_DEFAULT_SNIPPET": True,
 }
 
 
@@ -27,8 +23,8 @@ def get_setting(key: str, default: Any = None) -> Any:
         The setting value or default
 
     Example:
-        >>> get_setting('BLOCK_TYPES')
-        [('rich_text', RichTextBlock()), ('raw_html', RawHTMLBlock())]
+        >>> get_setting('TEMPLATE')
+        'wagtail_reusable_blocks/reusable_block.html'
     """
     user_settings = getattr(settings, "WAGTAIL_REUSABLE_BLOCKS", {})
 
