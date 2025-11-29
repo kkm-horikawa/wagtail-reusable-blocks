@@ -347,11 +347,36 @@ Examples:
 
 ## Development Workflow
 
-### 1. Check Existing Issues
+### For External Contributors (Fork-based)
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork**:
+   ```bash
+   git clone https://github.com/<your-username>/wagtail-reusable-blocks.git
+   cd wagtail-reusable-blocks
+   ```
+3. **Add upstream remote**:
+   ```bash
+   git remote add upstream https://github.com/kkm-horikawa/wagtail-reusable-blocks.git
+   ```
+4. **Create a branch from develop**:
+   ```bash
+   git fetch upstream
+   git checkout -b feature/<issue-number>-<description> upstream/develop
+   ```
+5. **Make changes, commit, and push to your fork**:
+   ```bash
+   git push origin feature/<issue-number>-<description>
+   ```
+6. **Create a Pull Request** from your fork to `upstream/develop`
+
+### For Maintainers (Direct)
+
+#### 1. Check Existing Issues
 
 Before starting work, check the [Issue Tracker](https://github.com/kkm-horikawa/wagtail-reusable-blocks/issues) and [Project Board](https://github.com/users/kkm-horikawa/projects/6).
 
-### 2. Create a Branch
+#### 2. Create a Branch
 
 ```bash
 # Start from develop
@@ -364,13 +389,13 @@ git checkout -b feature/<issue-number>-<description>
 git checkout -b fix/<issue-number>-<description>
 ```
 
-### 3. Make Changes
+#### 3. Make Changes
 
 - Write tests for new functionality
 - Follow existing code style
 - Update documentation if needed
 
-### 4. Test Your Changes
+#### 4. Test Your Changes
 
 ```bash
 pytest
@@ -378,7 +403,7 @@ ruff check .
 ruff format --check .
 ```
 
-### 5. Commit
+#### 5. Commit
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -388,7 +413,7 @@ git commit -m "fix: resolve circular reference detection"
 git commit -m "docs: update installation guide"
 ```
 
-### 6. Push and Create PR
+#### 6. Push and Create PR
 
 ```bash
 git push origin feature/<issue-number>-<description>
@@ -396,7 +421,7 @@ git push origin feature/<issue-number>-<description>
 
 Then create a Pull Request **to `develop`** on GitHub.
 
-### 7. Release Process
+### Release Process (Maintainers only)
 
 When ready to release:
 1. Create PR from `develop` to `main`
