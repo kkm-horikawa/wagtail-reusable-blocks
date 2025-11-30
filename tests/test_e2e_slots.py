@@ -6,10 +6,7 @@ to rendering them on pages.
 
 import pytest
 
-from wagtail_reusable_blocks.blocks import (
-    ReusableBlockChooserBlock,
-    ReusableLayoutBlock,
-)
+from wagtail_reusable_blocks.blocks import ReusableLayoutBlock
 from wagtail_reusable_blocks.models import ReusableBlock
 
 
