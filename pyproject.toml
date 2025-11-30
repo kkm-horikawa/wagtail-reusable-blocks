@@ -11,11 +11,12 @@ classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
     "Framework :: Django :: 4.2",
-    "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
     "Framework :: Wagtail",
     "Framework :: Wagtail :: 5",
     "Framework :: Wagtail :: 6",
+    "Framework :: Wagtail :: 7",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
@@ -24,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 keywords = ["wagtail", "django", "cms", "reusable", "blocks", "components"]
@@ -47,6 +49,8 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13",
     "django-stubs>=5.1",
+    "tox>=4.0",
+    "tox-uv>=1.0",
 ]
 
 [build-system]
@@ -61,6 +65,20 @@ version_scheme = "no-guess-dev"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wagtail_reusable_blocks"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.hatch.build]
+include = [
+    "src/wagtail_reusable_blocks/**/*.py",
+    "src/wagtail_reusable_blocks/templates/**/*.html",
+]
 
 [tool.ruff]
 line-length = 88
@@ -90,7 +108,7 @@ quote-style = "double"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
 
@@ -99,6 +117,7 @@ python_version = "3.10"
 plugins = ["mypy_django_plugin.main"]
 strict = true
 warn_unreachable = true
+exclude = ["tests/"]
 
 [[tool.mypy.overrides]]
 module = ["wagtail.*"]
@@ -117,3 +136,53 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
 ]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py{310,311,312,313,314}-django{42,51,52}-wagtail{52,64,70,72}
+
+[testenv]
+deps =
+    pytest>=8.0
+    pytest-django>=4.8
+    pytest-cov>=4.1
+    django42: Django~=4.2.0
+    django51: Django~=5.1.0
+    django52: Django~=5.2.0
+    wagtail52: wagtail~=5.2.0
+    wagtail64: wagtail~=6.4.0
+    wagtail70: wagtail~=7.0.0
+    wagtail72: wagtail~=7.2.0
+commands = bash -c "pytest --cov --cov-report=term {posargs} || test $? -eq 5"
+install_command = uv pip install {opts} {packages}
+package = editable
+allowlist_externals =
+    uv
+    bash
+
+# Exclusions matching CI matrix
+# Django 5.2 requires Python 3.11+
+[testenv:py310-django52-wagtail{52,64,70,72}]
+deps =
+skip_install = true
+commands =
+
+# Wagtail 5.2 only supports Django 4.2 (among tested versions)
+[testenv:py{310,311,312,313,314}-django{51,52}-wagtail52]
+deps =
+skip_install = true
+commands =
+
+# Python 3.14 only supported by Django 5.2
+[testenv:py314-django{42,51}-wagtail{52,64,70,72}]
+deps =
+skip_install = true
+commands =
+
+# Python 3.14 only supported by Wagtail 7.2
+[testenv:py314-django52-wagtail{52,64,70}]
+deps =
+skip_install = true
+commands =
+"""

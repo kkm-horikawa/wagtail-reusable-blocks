@@ -6,8 +6,43 @@ Thank you for your interest in contributing!
 
 ### Prerequisites
 
-- Python 3.10+
-- uv (recommended) or pip
+- Python 3.10+ (for basic development)
+- **Python 3.10, 3.11, 3.12, 3.13, 3.14** (for full matrix testing with tox)
+- **uv 0.9.0+** (recommended) or pip
+  - For Python 3.14 support, uv 0.9.0 or later is required
+  - Check version: `uv --version`
+  - Update: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+#### Installing Multiple Python Versions
+
+For full matrix testing, you'll need all supported Python versions installed.
+
+**Using uv (recommended):**
+```bash
+# Install all supported Python versions
+uv python install 3.10 3.11 3.12 3.13 3.14
+
+# Verify installations
+uv python list
+```
+
+> **Note:** Python 3.14 may be in alpha/beta during development. If you encounter stability issues with Python 3.14 tests (e.g., segmentation faults), this is expected for pre-release versions. The CI workflow tests against the stable release.
+
+**Alternative: Using pyenv:**
+```bash
+# Install pyenv
+curl https://pyenv.run | bash
+
+# Install all supported Python versions
+pyenv install 3.10.16
+pyenv install 3.11.11
+pyenv install 3.12.8
+pyenv install 3.13.1
+pyenv install 3.14.0
+
+# Make them available globally
+pyenv global 3.13.1 3.10.16 3.11.11 3.12.8 3.14.0
+```
 
 ### Clone and Setup
 
@@ -26,11 +61,151 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+> **Note:** We use `uv pip install` instead of `uv sync` because this is a **library project**.
+> We don't commit `uv.lock` to maintain dependency flexibility for downstream users.
+> See [Project Management](#project-management) for more details.
+
 ### Running Tests
 
 ```bash
 pytest
 ```
+
+### Running Matrix Tests Locally
+
+To test against all supported Python/Django/Wagtail combinations (39 total):
+
+```bash
+# Install tox
+uv pip install tox
+
+# Run all 39 combinations
+tox
+
+# Test specific Python version (all Django/Wagtail combinations)
+tox -e py314
+
+# Test specific combination
+tox -e py314-django52-wagtail72
+
+# Run in parallel (faster)
+tox -p auto
+
+# Pass pytest arguments
+tox -- -k test_specific
+
+# List all available environments
+tox -l
+```
+
+This matches the CI matrix exactly, allowing you to verify compatibility before pushing.
+
+**Note:** Tox will create virtual environments for each combination. The first run will be slow, but subsequent runs are faster due to caching.
+
+## Supported Versions
+
+### Python Versions
+- **3.10** (minimum)
+- **3.11**
+- **3.12**
+- **3.13**
+- **3.14** (latest)
+
+### Django Versions
+- **4.2** (LTS - Long Term Support until April 2026)
+- **5.1**
+- **5.2** (LTS - Long Term Support until April 2028)
+
+### Wagtail Versions
+- **5.2** (LTS - Long Term Support)
+- **6.4**
+- **7.0** (LTS - Long Term Support)
+- **7.2** (latest)
+
+## Version Compatibility Matrix
+
+Our CI tests 39 valid combinations of Python, Django, and Wagtail versions.
+
+### Compatibility Table
+
+| Python | Django 4.2 | Django 5.1 | Django 5.2 |
+|--------|------------|------------|------------|
+| **Wagtail 5.2** ||||
+| 3.10 | ✅ | ❌ | ❌ |
+| 3.11 | ✅ | ❌ | ❌ |
+| 3.12 | ✅ | ❌ | ❌ |
+| 3.13 | ✅ | ❌ | ❌ |
+| 3.14 | ❌ | ❌ | ❌ |
+| **Wagtail 6.4** ||||
+| 3.10 | ✅ | ✅ | ❌ |
+| 3.11 | ✅ | ✅ | ✅ |
+| 3.12 | ✅ | ✅ | ✅ |
+| 3.13 | ✅ | ✅ | ✅ |
+| 3.14 | ❌ | ❌ | ❌ |
+| **Wagtail 7.0** ||||
+| 3.10 | ✅ | ✅ | ❌ |
+| 3.11 | ✅ | ✅ | ✅ |
+| 3.12 | ✅ | ✅ | ✅ |
+| 3.13 | ✅ | ✅ | ✅ |
+| 3.14 | ❌ | ❌ | ❌ |
+| **Wagtail 7.2** ||||
+| 3.10 | ✅ | ✅ | ❌ |
+| 3.11 | ✅ | ✅ | ✅ |
+| 3.12 | ✅ | ✅ | ✅ |
+| 3.13 | ✅ | ✅ | ✅ |
+| 3.14 | ❌ | ❌ | ✅ |
+
+**Summary:**
+- **Total combinations**: 60 (5 Python × 3 Django × 4 Wagtail)
+- **Valid combinations**: 39 (tested in CI)
+- **Excluded combinations**: 21
+
+### Exclusion Rationale
+
+Certain combinations are excluded due to compatibility constraints:
+
+1. **Python 3.10 + Django 5.2**: Django 5.2 requires Python 3.11+
+2. **Wagtail 5.2 + Django 5.1/5.2**: Wagtail 5.2 only supports Django up to 4.2
+3. **Python 3.14 + Django 4.2/5.1**: Python 3.14 is only supported by Django 5.2+
+4. **Python 3.14 + Wagtail 5.2/6.4/7.0**: Python 3.14 is only supported by Wagtail 7.2+
+
+These exclusions are based on official compatibility tables:
+- [Django FAQ: Installation](https://docs.djangoproject.com/en/stable/faq/install/)
+- [Wagtail Upgrading Guide](https://docs.wagtail.org/en/stable/releases/upgrading.html)
+
+## Test Matrix Strategy
+
+### CI Workflow
+Our GitHub Actions CI tests all 39 valid combinations in parallel, ensuring compatibility across:
+- All supported Python versions
+- All supported Django versions
+- All supported Wagtail versions
+
+See `.github/workflows/ci.yml` for the complete matrix configuration.
+
+### Local Testing with tox
+Use `tox` to replicate the CI matrix locally before pushing:
+
+```bash
+# Test all 39 combinations
+tox
+
+# Test specific Python version
+tox -e py314
+
+# Test specific combination
+tox -e py314-django52-wagtail72
+```
+
+### Why No `uv.lock`?
+
+This is a **library project**, not an application. We intentionally don't commit `uv.lock` to:
+
+- Allow downstream users to resolve dependencies based on their own constraints
+- Maintain maximum compatibility across different environments
+- Avoid forcing specific transitive dependency versions
+
+Applications should use lock files for reproducible builds. Libraries should not.
 
 ### Code Style
 
@@ -318,6 +493,8 @@ gitGraph
 | `feature/*` | New features | `develop` | `develop` |
 | `fix/*` | Bug fixes | `develop` | `develop` |
 | `hotfix/*` | Urgent production fixes | `main` | `main` + `develop` |
+| `chore/*` | Maintenance, config, dependencies | `develop` | `develop` |
+| `docs/*` | Documentation updates | `develop` | `develop` |
 
 ### Branch Naming
 
@@ -325,12 +502,16 @@ gitGraph
 feature/<issue-number>-<short-description>
 fix/<issue-number>-<short-description>
 hotfix/<issue-number>-<short-description>
+chore/<short-description>
+docs/<short-description>
 ```
 
 Examples:
 - `feature/1-reusable-block-model`
 - `fix/12-circular-reference-detection`
 - `hotfix/15-security-patch`
+- `chore/update-dependencies`
+- `docs/api-reference`
 
 ### Protected Branches
 
@@ -341,11 +522,42 @@ Examples:
 
 ## Development Workflow
 
-### 1. Check Existing Issues
+### For External Contributors (Fork-based)
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork**:
+   ```bash
+   git clone https://github.com/<your-username>/wagtail-reusable-blocks.git
+   cd wagtail-reusable-blocks
+   ```
+3. **Add upstream remote**:
+   ```bash
+   git remote add upstream https://github.com/kkm-horikawa/wagtail-reusable-blocks.git
+   ```
+4. **Create a branch from develop**:
+   ```bash
+   git fetch upstream
+   git checkout -b feature/<issue-number>-<description> upstream/develop
+   ```
+5. **Make changes, commit, and push to your fork**:
+   ```bash
+   git push origin feature/<issue-number>-<description>
+   ```
+6. **Create a Pull Request** from your fork to `upstream/develop`
+
+### For Maintainers (Direct)
+
+We recommend using **Draft PRs** for planning and early feedback.
+
+#### 1. Check Existing Issues
 
 Before starting work, check the [Issue Tracker](https://github.com/kkm-horikawa/wagtail-reusable-blocks/issues) and [Project Board](https://github.com/users/kkm-horikawa/projects/6).
 
-### 2. Create a Branch
+- Search for existing issues to avoid duplication
+- Comment on the issue to claim it
+- If no issue exists, create one first
+
+#### 2. Create a Branch
 
 ```bash
 # Start from develop
@@ -358,21 +570,57 @@ git checkout -b feature/<issue-number>-<description>
 git checkout -b fix/<issue-number>-<description>
 ```
 
-### 3. Make Changes
+#### 3. Create a Draft PR (Recommended)
 
+Creating a Draft PR **before implementing** provides several benefits:
+
+- **Early feedback**: Get architectural guidance before investing time
+- **Avoid rework**: Catch potential issues early
+- **Communication**: Team knows what you're working on
+- **Planning**: Forces you to think through the approach
+- **Progress tracking**: Can commit work-in-progress safely
+
+```bash
+# Create an empty commit to initialize the PR
+git commit --allow-empty -m "feat: initialize <feature name>
+
+Track progress for #<issue-number>"
+
+# Push and create Draft PR
+git push -u origin feature/<issue-number>-<description>
+```
+
+Then create a **Draft Pull Request** on GitHub with:
+
+- Reference: `Closes #<issue-number>`
+- Implementation plan as checkboxes:
+  ```markdown
+  ## Implementation Plan
+  - [ ] Create model
+  - [ ] Add admin interface
+  - [ ] Write tests
+  - [ ] Update documentation
+  ```
+- Test strategy outline
+
+#### 4. Implement
+
+- Follow the plan in your Draft PR
 - Write tests for new functionality
 - Follow existing code style
-- Update documentation if needed
+- Commit regularly with clear messages
+- Update PR checkboxes as you progress
 
-### 4. Test Your Changes
+#### 5. Test Your Changes
 
 ```bash
 pytest
 ruff check .
 ruff format --check .
+mypy src/
 ```
 
-### 5. Commit
+#### 6. Commit
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -382,20 +630,140 @@ git commit -m "fix: resolve circular reference detection"
 git commit -m "docs: update installation guide"
 ```
 
-### 6. Push and Create PR
+#### 7. Mark PR as Ready for Review
 
-```bash
-git push origin feature/<issue-number>-<description>
-```
+When implementation is complete:
 
-Then create a Pull Request **to `develop`** on GitHub.
+- Ensure all tests pass locally
+- Update documentation if needed
+- Mark PR as "Ready for review"
 
-### 7. Release Process
+#### 8. Self-Review and Merge
+
+For **maintainers and core contributors**:
+
+- You may approve and merge your own PRs if:
+  - All CI checks pass
+  - The change is well-documented
+  - Tests are included
+  - The PR has been open for reasonable time (for feedback)
+
+Use admin privileges to bypass approval requirements when appropriate.
+
+### Release Process (Maintainers only)
 
 When ready to release:
 1. Create PR from `develop` to `main`
 2. After merge, tag the release: `git tag v0.x.0`
 3. Push tag: `git push origin v0.x.0`
+
+## Project Management
+
+### Our Philosophy
+
+This is an **open-source project built by volunteers**. Our management approach reflects this:
+
+- ✅ **No time estimates or strict deadlines** - Contributors work at their own pace
+- ✅ **Quality over speed** - We'd rather ship it right than ship it fast
+- ✅ **Clear issue descriptions** - Every issue has acceptance criteria
+- ✅ **Transparent dependencies** - We use parent/child and blocked-by relationships
+- ✅ **Version-based milestones** - Group features by version, not by date
+
+### Labels
+
+We use labels to categorize and prioritize work:
+
+| Label | Meaning | When to Use |
+|-------|---------|-------------|
+| `good first issue` | Great for newcomers | Small, well-defined tasks |
+| `priority:critical` | Requires immediate attention | Security, data loss, blocks other work |
+| `priority:high` | Important, affects multiple people | Features needed by many, impactful bugs |
+| `priority:medium` | Normal priority | Default for most issues |
+| `priority:low` | Nice to have | Future improvements, minor enhancements |
+| `atomic` | Small, focused issue | No sub-issues needed, single PR |
+| `parent` | Has sub-issues | Large task broken into smaller pieces |
+| `child` | Sub-issue of a parent | Part of a larger task |
+| `enhancement` | New feature or improvement | Adding functionality |
+| `bug` | Something isn't working | Fixing broken behavior |
+| `documentation` | Documentation improvements | README, guides, comments |
+
+### Issue Relationships
+
+We use GitHub's issue relationship features to show dependencies and task decomposition.
+
+#### Parent/Child Relationships (Sub-issues)
+
+Use when breaking large work into smaller, manageable tasks:
+
+```bash
+# Example: Set Issue #24 as a sub-issue of Issue #10
+PARENT_ID=$(gh issue view 10 --json id --jq ".id")
+CHILD_ID=$(gh issue view 24 --json id --jq ".id")
+gh api graphql -H "GraphQL-Features: sub_issues" -f query='
+mutation($parentId: ID!, $childId: ID!) {
+  addSubIssue(input: { issueId: $parentId, subIssueId: $childId }) {
+    issue { title number }
+    subIssue { title number }
+  }
+}' -f parentId="$PARENT_ID" -f childId="$CHILD_ID"
+```
+
+**When to create sub-issues:**
+- Task is too large for one PR
+- Work can be parallelized among contributors
+- Clear logical decomposition exists
+
+**When NOT to create sub-issues:**
+- Small, atomic tasks (use `atomic` label)
+- Tasks that are naturally sequential
+
+#### Blocked By Relationships
+
+Use when an issue depends on another issue to be completed first:
+
+```bash
+# Example: Mark Issue #21 as blocked by Issue #10
+ISSUE_ID=$(gh issue view 21 --json id --jq ".id")
+BLOCKING_ID=$(gh issue view 10 --json id --jq ".id")
+gh api graphql -H "GraphQL-Features: issue_types" -f query='
+mutation($issueId: ID!, $blockingIssueId: ID!) {
+  addBlockedBy(input: { issueId: $issueId, blockingIssueId: $blockingIssueId }) {
+    issue { title number }
+    blockingIssue { title number }
+  }
+}' -f issueId="$ISSUE_ID" -f blockingIssueId="$BLOCKING_ID"
+```
+
+### GitHub Projects
+
+We use [GitHub Projects](https://github.com/users/kkm-horikawa/projects/6) to track progress:
+
+| Status | Meaning |
+|--------|---------|
+| **Todo** | Ready to work on |
+| **In Progress** | Actively being worked on |
+| **Done** | Completed and merged |
+
+Contributors can move their assigned issues through the board as they progress.
+
+### Why No Time Tracking?
+
+Unlike commercial software projects, we don't track:
+- Story points
+- Time estimates
+- Sprint deadlines
+- Velocity
+
+**Reasons:**
+- OSS contributors are volunteers with varying availability
+- Forcing deadlines creates unnecessary pressure
+- Quality and correctness matter more than speed
+- Contributors work at their own pace
+
+Instead, we focus on:
+- **What** needs to be done (clear acceptance criteria)
+- **Why** it's important (context and motivation)
+- **How** it relates to other work (dependencies)
 
 ## Milestones and Roadmap
 
