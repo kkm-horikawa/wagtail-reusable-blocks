@@ -1,6 +1,7 @@
 # wagtail-reusable-blocks
 
 [![PyPI version](https://badge.fury.io/py/wagtail-reusable-blocks.svg)](https://badge.fury.io/py/wagtail-reusable-blocks)
+[![Published on Django Packages](https://img.shields.io/badge/Published%20on-Django%20Packages-0c3c26)](https://djangopackages.org/packages/p/wagtail-reusable-blocks/)
 [![CI](https://github.com/kkm-horikawa/wagtail-reusable-blocks/actions/workflows/ci.yml/badge.svg)](https://github.com/kkm-horikawa/wagtail-reusable-blocks/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/kkm-horikawa/wagtail-reusable-blocks/branch/develop/graph/badge.svg)](https://codecov.io/gh/kkm-horikawa/wagtail-reusable-blocks)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
