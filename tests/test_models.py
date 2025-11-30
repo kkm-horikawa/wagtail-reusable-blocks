@@ -93,6 +93,15 @@ class TestReusableBlockSlugUniqueness:
 
         assert block.slug == "custom-slug"
 
+    @pytest.mark.django_db
+    def test_slug_can_be_blank_on_creation(self):
+        """Slug can be left blank and will be auto-generated."""
+        # This simulates creating via admin form without providing slug
+        block = ReusableBlock(name="New Block")
+        block.save()
+
+        assert block.slug == "new-block"
+
 
 class TestReusableBlockValidation:
     """Tests for model validation."""

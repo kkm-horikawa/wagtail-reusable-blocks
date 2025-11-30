@@ -86,6 +86,7 @@ class ReusableBlock(models.Model):
     slug = models.SlugField(
         unique=True,
         max_length=MAX_NAME_LENGTH,
+        blank=True,
         help_text="URL-safe identifier, auto-generated from name",
     )
     content = StreamField(
