@@ -10,12 +10,13 @@ from django.utils.text import slugify
 from wagtail.admin.panels import FieldPanel
 from wagtail.blocks import RawHTMLBlock, RichTextBlock
 from wagtail.fields import StreamField
+from wagtail.search import index
 
 if TYPE_CHECKING:
     from django.template.context import Context
 
 
-class ReusableBlock(models.Model):
+class ReusableBlock(index.Indexed, models.Model):  # type: ignore[misc]
     """Reusable content blocks that can be used across multiple pages.
 
     By default, this model is automatically registered as a Wagtail Snippet
@@ -106,6 +107,13 @@ class ReusableBlock(models.Model):
         FieldPanel("name"),
         FieldPanel("slug"),
         FieldPanel("content"),
+    ]
+
+    # Search configuration
+    search_fields = [
+        index.SearchField("name", partial_match=True),
+        index.SearchField("slug", partial_match=True),
+        index.AutocompleteField("name"),
     ]
 
     class Meta:
