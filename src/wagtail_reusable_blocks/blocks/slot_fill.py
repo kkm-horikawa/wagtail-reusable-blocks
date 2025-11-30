@@ -11,10 +11,12 @@ from wagtail.blocks import (
 )
 
 if TYPE_CHECKING:
-    pass
+    from wagtail.blocks import StructBlock as StructBlockType
+else:
+    StructBlockType = StructBlock  # type: ignore[misc,assignment]
 
 
-class SlotFillBlock(StructBlock):
+class SlotFillBlock(StructBlockType):  # type: ignore[misc]
     """Content to inject into a specific slot in a layout template.
 
     This block allows editors to specify which slot to fill and what content

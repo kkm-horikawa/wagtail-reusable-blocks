@@ -19,6 +19,7 @@ class TestSlotFillBlock:
         assert "slot_id" in block.child_blocks
         # CharBlock exists and is the correct type
         from wagtail.blocks import CharBlock
+
         assert isinstance(block.child_blocks["slot_id"], CharBlock)
 
     def test_block_has_content_field(self):
@@ -35,12 +36,12 @@ class TestSlotFillBlock:
         block = SlotFillBlock()
 
         # Create a value
-        value = block.to_python({
-            "slot_id": "main",
-            "content": [
-                {"type": "rich_text", "value": "<p>Test content</p>"}
-            ]
-        })
+        value = block.to_python(
+            {
+                "slot_id": "main",
+                "content": [{"type": "rich_text", "value": "<p>Test content</p>"}],
+            }
+        )
 
         # Verify structure
         assert value["slot_id"] == "main"
@@ -63,12 +64,12 @@ class TestSlotFillBlock:
     def test_content_field_accepts_rich_text(self):
         """content field accepts RichTextBlock."""
         block = SlotFillBlock()
-        value = block.to_python({
-            "slot_id": "test",
-            "content": [
-                {"type": "rich_text", "value": "<p>Rich text content</p>"}
-            ]
-        })
+        value = block.to_python(
+            {
+                "slot_id": "test",
+                "content": [{"type": "rich_text", "value": "<p>Rich text content</p>"}],
+            }
+        )
 
         assert value["content"][0].block_type == "rich_text"
         assert isinstance(value["content"][0].block, RichTextBlock)
@@ -76,36 +77,35 @@ class TestSlotFillBlock:
     def test_content_field_accepts_raw_html(self):
         """content field accepts RawHTMLBlock."""
         block = SlotFillBlock()
-        value = block.to_python({
-            "slot_id": "test",
-            "content": [
-                {"type": "raw_html", "value": "<div>Custom HTML</div>"}
-            ]
-        })
+        value = block.to_python(
+            {
+                "slot_id": "test",
+                "content": [{"type": "raw_html", "value": "<div>Custom HTML</div>"}],
+            }
+        )
 
         assert value["content"][0].block_type == "raw_html"
 
     def test_content_field_accepts_multiple_blocks(self):
         """content field can contain multiple blocks."""
         block = SlotFillBlock()
-        value = block.to_python({
-            "slot_id": "test",
-            "content": [
-                {"type": "rich_text", "value": "<p>First</p>"},
-                {"type": "raw_html", "value": "<hr>"},
-                {"type": "rich_text", "value": "<p>Second</p>"},
-            ]
-        })
+        value = block.to_python(
+            {
+                "slot_id": "test",
+                "content": [
+                    {"type": "rich_text", "value": "<p>First</p>"},
+                    {"type": "raw_html", "value": "<hr>"},
+                    {"type": "rich_text", "value": "<p>Second</p>"},
+                ],
+            }
+        )
 
         assert len(value["content"]) == 3
 
     def test_empty_content_allowed(self):
         """content field can be empty (useful for clearing default content)."""
         block = SlotFillBlock()
-        value = block.to_python({
-            "slot_id": "test",
-            "content": []
-        })
+        value = block.to_python({"slot_id": "test", "content": []})
 
         assert value["slot_id"] == "test"
         assert len(value["content"]) == 0
@@ -127,12 +127,12 @@ class TestSlotFillBlockRendering:
         # So we don't test render() here - it uses default StructBlock rendering
 
         block = SlotFillBlock()
-        value = block.to_python({
-            "slot_id": "test",
-            "content": [
-                {"type": "rich_text", "value": "<p>Content</p>"}
-            ]
-        })
+        value = block.to_python(
+            {
+                "slot_id": "test",
+                "content": [{"type": "rich_text", "value": "<p>Content</p>"}],
+            }
+        )
 
         # The block can be rendered (uses default StructBlock rendering)
         # but this is not the intended use case
@@ -146,9 +146,11 @@ class TestSlotFillBlockIntegration:
     def test_import_from_package(self):
         """SlotFillBlock can be imported from package."""
         from wagtail_reusable_blocks.blocks import SlotFillBlock as ImportedBlock
+
         assert ImportedBlock is not None
 
     def test_block_in_all_exports(self):
         """SlotFillBlock is in __all__ exports."""
         from wagtail_reusable_blocks import blocks
+
         assert "SlotFillBlock" in blocks.__all__
