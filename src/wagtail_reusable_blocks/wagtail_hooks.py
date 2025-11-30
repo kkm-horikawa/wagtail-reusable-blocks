@@ -92,6 +92,8 @@ def register_admin_urls() -> list[object]:
     return [
         path(
             "reusable-blocks/",
-            include((urls, "wagtail_reusable_blocks"), namespace="wagtail_reusable_blocks"),
+            include(
+                (urls, "wagtail_reusable_blocks"), namespace="wagtail_reusable_blocks"
+            ),
         ),
     ]
