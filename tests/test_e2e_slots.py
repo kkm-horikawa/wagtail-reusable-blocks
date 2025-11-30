@@ -47,35 +47,37 @@ class TestSlotBasedTemplatingE2E:
         block = ReusableLayoutBlock()
 
         # 3. Create block value with slot fills
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "main",
-                        "content": [
-                            {
-                                "type": "rich_text",
-                                "value": "<p>Article content here</p>",
-                            }
-                        ],
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "main",
+                            "content": [
+                                {
+                                    "type": "rich_text",
+                                    "value": "<p>Article content here</p>",
+                                }
+                            ],
+                        },
                     },
-                },
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "sidebar",
-                        "content": [
-                            {
-                                "type": "raw_html",
-                                "value": "<div>Custom sidebar</div>",
-                            }
-                        ],
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "sidebar",
+                            "content": [
+                                {
+                                    "type": "raw_html",
+                                    "value": "<div>Custom sidebar</div>",
+                                }
+                            ],
+                        },
                     },
-                },
-            ],
-        })
+                ],
+            }
+        )
 
         # 4. Render the block
         html = block.render(value)
@@ -111,21 +113,23 @@ class TestSlotBasedTemplatingE2E:
         block = ReusableLayoutBlock()
 
         # Create value that only fills slot1
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "slot1",
-                        "content": [
-                            {"type": "raw_html", "value": "<p>Custom slot1</p>"}
-                        ],
-                    },
-                }
-                # slot2 not filled
-            ],
-        })
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "slot1",
+                            "content": [
+                                {"type": "raw_html", "value": "<p>Custom slot1</p>"}
+                            ],
+                        },
+                    }
+                    # slot2 not filled
+                ],
+            }
+        )
 
         # Render
         html = block.render(value)
@@ -135,7 +139,9 @@ class TestSlotBasedTemplatingE2E:
         assert "Default for slot1" not in html
         assert "Default for slot2" in html  # Unfilled, shows default
 
-    @pytest.mark.skip(reason="BeautifulSoup append issue with nested layouts - see Issue #62")
+    @pytest.mark.skip(
+        reason="BeautifulSoup append issue with nested layouts - see Issue #62"
+    )
     def test_nested_layouts(self):
         """Test nested ReusableLayoutBlock within slots."""
         # Create outer layout
@@ -174,39 +180,41 @@ class TestSlotBasedTemplatingE2E:
         block = ReusableLayoutBlock()
 
         # Create value with nested layouts
-        value = block.to_python({
-            "layout": outer_layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "content",
-                        "content": [
-                            {
-                                "type": "layout",  # Nested layout!
-                                "value": {
-                                    "layout": inner_layout.pk,
-                                    "slot_content": [
-                                        {
-                                            "type": "slot_fill",
-                                            "value": {
-                                                "slot_id": "main",
-                                                "content": [
-                                                    {
-                                                        "type": "rich_text",
-                                                        "value": "<p>Nested content</p>",
-                                                    }
-                                                ],
-                                            },
-                                        }
-                                    ],
-                                },
-                            }
-                        ],
-                    },
-                }
-            ],
-        })
+        value = block.to_python(
+            {
+                "layout": outer_layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "content",
+                            "content": [
+                                {
+                                    "type": "layout",  # Nested layout!
+                                    "value": {
+                                        "layout": inner_layout.pk,
+                                        "slot_content": [
+                                            {
+                                                "type": "slot_fill",
+                                                "value": {
+                                                    "slot_id": "main",
+                                                    "content": [
+                                                        {
+                                                            "type": "rich_text",
+                                                            "value": "<p>Nested content</p>",
+                                                        }
+                                                    ],
+                                                },
+                                            }
+                                        ],
+                                    },
+                                }
+                            ],
+                        },
+                    }
+                ],
+            }
+        )
 
         # Render
         html = block.render(value)
@@ -233,27 +241,29 @@ class TestSlotBasedTemplatingE2E:
         block = ReusableLayoutBlock()
 
         # Create value using both
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "main",
-                        "content": [
-                            {
-                                "type": "reusable_block",  # v0.1.0 block in v0.2.0 slot
-                                "value": content_block.pk,
-                            },
-                            {
-                                "type": "rich_text",
-                                "value": "<p>Main content</p>",
-                            },
-                        ],
-                    },
-                }
-            ],
-        })
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "main",
+                            "content": [
+                                {
+                                    "type": "reusable_block",  # v0.1.0 block in v0.2.0 slot
+                                    "value": content_block.pk,
+                                },
+                                {
+                                    "type": "rich_text",
+                                    "value": "<p>Main content</p>",
+                                },
+                            ],
+                        },
+                    }
+                ],
+            }
+        )
 
         # Render
         html = block.render(value)
@@ -282,44 +292,46 @@ class TestSlotBasedTemplatingE2E:
 
         block = ReusableLayoutBlock()
 
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "header",
-                        "content": [
-                            {"type": "raw_html", "value": "<h1>Custom Header</h1>"}
-                        ],
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "header",
+                            "content": [
+                                {"type": "raw_html", "value": "<h1>Custom Header</h1>"}
+                            ],
+                        },
                     },
-                },
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "main",
-                        "content": [
-                            {
-                                "type": "rich_text",
-                                "value": "<p>Custom Main</p>",
-                            }
-                        ],
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "main",
+                            "content": [
+                                {
+                                    "type": "rich_text",
+                                    "value": "<p>Custom Main</p>",
+                                }
+                            ],
+                        },
                     },
-                },
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "footer",
-                        "content": [
-                            {
-                                "type": "raw_html",
-                                "value": "<p>Custom Footer</p>",
-                            }
-                        ],
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "footer",
+                            "content": [
+                                {
+                                    "type": "raw_html",
+                                    "value": "<p>Custom Footer</p>",
+                                }
+                            ],
+                        },
                     },
-                },
-            ],
-        })
+                ],
+            }
+        )
 
         html = block.render(value)
 
@@ -345,31 +357,33 @@ class TestSlotBasedTemplatingE2E:
 
         block = ReusableLayoutBlock()
 
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "content",
-                        "content": [
-                            {
-                                "type": "rich_text",
-                                "value": "<h2>First Block</h2>",
-                            },
-                            {
-                                "type": "raw_html",
-                                "value": "<div>Second Block</div>",
-                            },
-                            {
-                                "type": "rich_text",
-                                "value": "<p>Third Block</p>",
-                            },
-                        ],
-                    },
-                }
-            ],
-        })
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "content",
+                            "content": [
+                                {
+                                    "type": "rich_text",
+                                    "value": "<h2>First Block</h2>",
+                                },
+                                {
+                                    "type": "raw_html",
+                                    "value": "<div>Second Block</div>",
+                                },
+                                {
+                                    "type": "rich_text",
+                                    "value": "<p>Third Block</p>",
+                                },
+                            ],
+                        },
+                    }
+                ],
+            }
+        )
 
         html = block.render(value)
 
@@ -396,10 +410,12 @@ class TestSlotBasedTemplatingE2E:
 
         block = ReusableLayoutBlock()
 
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [],  # No slots to fill
-        })
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [],  # No slots to fill
+            }
+        )
 
         html = block.render(value)
 
@@ -432,23 +448,25 @@ class TestSlotBasedTemplatingE2E:
         block = ReusableLayoutBlock()
 
         # Create value that fills the slot with a ReusableBlockChooserBlock
-        value = block.to_python({
-            "layout": layout.pk,
-            "slot_content": [
-                {
-                    "type": "slot_fill",
-                    "value": {
-                        "slot_id": "cta",
-                        "content": [
-                            {
-                                "type": "reusable_block",
-                                "value": reusable_content.pk,
-                            }
-                        ],
-                    },
-                }
-            ],
-        })
+        value = block.to_python(
+            {
+                "layout": layout.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "cta",
+                            "content": [
+                                {
+                                    "type": "reusable_block",
+                                    "value": reusable_content.pk,
+                                }
+                            ],
+                        },
+                    }
+                ],
+            }
+        )
 
         html = block.render(value)
 
