@@ -6,7 +6,55 @@ import pytest
 
 from wagtail_reusable_blocks.blocks import ReusableLayoutBlock
 from wagtail_reusable_blocks.models import ReusableBlock
-from wagtail_reusable_blocks.utils.rendering import render_layout_with_slots
+from wagtail_reusable_blocks.utils.rendering import (
+    render_layout_with_slots,
+    render_streamfield_content,
+)
+
+
+class TestRenderStreamfieldContent:
+    """Tests for render_streamfield_content function."""
+
+    def test_render_single_block(self):
+        """Renders a single block."""
+        block = Mock()
+        block.render.return_value = "<p>Content</p>"
+
+        result = render_streamfield_content([block])
+
+        assert result == "<p>Content</p>"
+        block.render.assert_called_once_with(None)
+
+    def test_render_multiple_blocks(self):
+        """Renders and concatenates multiple blocks."""
+        block1 = Mock()
+        block1.render.return_value = "<p>First</p>"
+
+        block2 = Mock()
+        block2.render.return_value = "<p>Second</p>"
+
+        block3 = Mock()
+        block3.render.return_value = "<p>Third</p>"
+
+        result = render_streamfield_content([block1, block2, block3])
+
+        assert result == "<p>First</p><p>Second</p><p>Third</p>"
+
+    def test_render_with_context(self):
+        """Passes context to block renders."""
+        block = Mock()
+        block.render.return_value = "<p>Content</p>"
+
+        context = {"page": {"title": "Test"}}
+        render_streamfield_content([block], context)
+
+        block.render.assert_called_once_with(context)
+
+    def test_render_empty_list(self):
+        """Handles empty block list."""
+        result = render_streamfield_content([])
+
+        assert result == ""
 
 
 class TestRenderLayoutWithSlots:

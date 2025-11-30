@@ -56,6 +56,51 @@ class TestReusableLayoutBlock:
         assert block.meta.label == "Reusable Layout"
 
     @pytest.mark.django_db
+    def test_get_form_context_with_layout(self):
+        """get_form_context() adds available_slots when layout is selected."""
+        layout = ReusableBlock.objects.create(
+            name="Layout with Slots",
+            content=[
+                {
+                    "type": "raw_html",
+                    "value": """
+                        <div data-slot="header" data-slot-label="Header Area"></div>
+                        <div data-slot="main"></div>
+                    """,
+                }
+            ],
+        )
+
+        block = ReusableLayoutBlock()
+        value = block.to_python({"layout": layout.id, "slot_content": []})
+
+        context = block.get_form_context(value, prefix="test")
+
+        assert "available_slots" in context
+        assert len(context["available_slots"]) == 2
+        assert context["available_slots"][0]["id"] == "header"
+        assert context["available_slots"][0]["label"] == "Header Area"
+        assert context["available_slots"][1]["id"] == "main"
+
+    def test_get_form_context_without_layout(self):
+        """get_form_context() works when no layout is selected."""
+        block = ReusableLayoutBlock()
+        value = block.to_python({"layout": None, "slot_content": []})
+
+        context = block.get_form_context(value, prefix="test")
+
+        assert "available_slots" not in context
+
+    def test_get_form_context_with_empty_value(self):
+        """get_form_context() works with empty dict value."""
+        block = ReusableLayoutBlock()
+
+        # Empty dict represents no value selected yet
+        context = block.get_form_context({}, prefix="test")
+
+        assert "available_slots" not in context
+
+    @pytest.mark.django_db
     def test_block_value_creation(self):
         """ReusableLayoutBlock can create and store values."""
         layout_block_model = ReusableBlock.objects.create(
