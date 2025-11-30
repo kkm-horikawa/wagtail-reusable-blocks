@@ -6,9 +6,13 @@ from django.conf import settings
 
 # Default settings
 DEFAULTS = {
+    # v0.1.0 settings
     "TEMPLATE": "wagtail_reusable_blocks/reusable_block.html",
     "REGISTER_DEFAULT_SNIPPET": True,
     "MAX_NESTING_DEPTH": 5,
+    # v0.2.0 settings
+    "SLOT_ATTRIBUTE": "data-slot",
+    "SLOT_LABEL_ATTRIBUTE": "data-slot-label",
 }
 
 
