@@ -21,6 +21,4 @@ class ReusableLayoutBlockAdapter(StructBlockAdapter):
 
     def js_initializer(self):
         """Initialize SlotChooserWidget on the client side."""
-        return (
-            f"new SlotChooserWidget('{self.id}-layout', '{self.id}-slot_content')"
-        )
+        return f"new SlotChooserWidget('{self.id}-layout', '{self.id}-slot_content')"
