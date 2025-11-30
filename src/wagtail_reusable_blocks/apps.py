@@ -19,10 +19,10 @@ class WagtailReusableBlocksConfig(AppConfig):
         """
         Perform initialization when Django starts.
 
-        Validates settings configuration and registers default snippet if enabled.
+        Validates settings configuration.
+        Note: ReusableBlock snippet registration is now handled in wagtail_hooks.py
         """
         self._validate_settings()
-        self._register_default_snippet()
 
     def _validate_settings(self) -> None:
         """Validate settings configuration."""
@@ -35,21 +35,3 @@ class WagtailReusableBlocksConfig(AppConfig):
                 "WAGTAIL_REUSABLE_BLOCKS['TEMPLATE'] must be a string. "
                 f"Got {type(template).__name__} instead."
             )
-
-    def _register_default_snippet(self) -> None:
-        """Register default ReusableBlock as snippet if enabled."""
-        from django.core.exceptions import ImproperlyConfigured
-
-        from .conf import get_setting
-
-        if get_setting("REGISTER_DEFAULT_SNIPPET"):
-            from wagtail.snippets.models import register_snippet
-
-            from .models import ReusableBlock
-
-            # Only register if not already registered
-            try:
-                register_snippet(ReusableBlock)
-            except ImproperlyConfigured:
-                # Already registered - this is fine in tests
-                pass
