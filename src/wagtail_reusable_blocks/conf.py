@@ -8,6 +8,7 @@ from django.conf import settings
 DEFAULTS = {
     "TEMPLATE": "wagtail_reusable_blocks/reusable_block.html",
     "REGISTER_DEFAULT_SNIPPET": True,
+    "MAX_NESTING_DEPTH": 5,
 }
 
 

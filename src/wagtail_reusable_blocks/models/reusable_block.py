@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
@@ -121,10 +122,90 @@ class ReusableBlock(models.Model):
         return self.name
 
     def save(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        """Save the model, auto-generating slug if not provided."""
+        """Save the model, auto-generating slug if not provided.
+
+        Raises:
+            ValidationError: If circular reference is detected.
+        """
         if not self.slug:
             self.slug = slugify(self.name)
+
+        # Validate for circular references before saving
+        self.clean()
+
         super().save(*args, **kwargs)
+
+    def clean(self) -> None:
+        """Validate the model for circular references.
+
+        Raises:
+            ValidationError: If circular reference is detected.
+        """
+        try:
+            self._detect_circular_references()
+        except ValidationError:
+            raise
+
+    def _detect_circular_references(self, visited: set[int] | None = None) -> None:
+        """Detect circular references in nested ReusableBlocks.
+
+        Args:
+            visited: Set of visited block IDs to track the traversal path.
+
+        Raises:
+            ValidationError: If a circular reference is detected.
+        """
+        # Skip validation if block hasn't been saved yet (no ID)
+        if not self.pk:
+            return
+
+        # Initialize visited set for root call
+        if visited is None:
+            visited = set()
+
+        # Check for self-reference
+        if self.pk in visited:
+            raise ValidationError(
+                f"Circular reference detected: Block '{self.name}' (id={self.pk}) "
+                f"references itself in the dependency chain."
+            )
+
+        # Add current block to visited set
+        visited.add(self.pk)
+
+        # Get all referenced ReusableBlocks from content
+        referenced_blocks = self._get_referenced_blocks()
+
+        # Recursively check each referenced block
+        for block in referenced_blocks:
+            try:
+                block._detect_circular_references(visited.copy())
+            except ValidationError as e:
+                # Re-raise with additional context
+                raise ValidationError(
+                    f"Circular reference detected: Block '{self.name}' references "
+                    f"block '{block.name}' which creates a cycle. {str(e)}"
+                ) from e
+
+    def _get_referenced_blocks(self) -> list["ReusableBlock"]:
+        """Extract all ReusableBlock references from the content StreamField.
+
+        Returns:
+            List of ReusableBlock instances referenced in the content.
+        """
+        from ..blocks import ReusableBlockChooserBlock
+
+        referenced_blocks: list[ReusableBlock] = []
+
+        # Iterate through all blocks in the content StreamField
+        for block in self.content:
+            # Check if this is a ReusableBlockChooserBlock
+            if isinstance(block.block, ReusableBlockChooserBlock):
+                # block.value contains the selected ReusableBlock instance
+                if block.value and isinstance(block.value, ReusableBlock):
+                    referenced_blocks.append(block.value)
+
+        return referenced_blocks
 
     def render(
         self,
