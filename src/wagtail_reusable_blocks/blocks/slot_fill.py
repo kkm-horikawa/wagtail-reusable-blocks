@@ -9,11 +9,41 @@ from wagtail.blocks import (
     StreamBlock,
     StructBlock,
 )
+from wagtail.images.blocks import ImageChooserBlock
 
 if TYPE_CHECKING:
+    from wagtail.blocks import StreamBlock as StreamBlockType
     from wagtail.blocks import StructBlock as StructBlockType
 else:
+    StreamBlockType = StreamBlock  # type: ignore[misc,assignment]
     StructBlockType = StructBlock  # type: ignore[misc,assignment]
+
+
+class SlotContentStreamBlock(StreamBlockType):  # type: ignore[misc]
+    """StreamBlock for slot content with lazy block type loading."""
+
+    def __init__(self, **kwargs):  # type: ignore[no-untyped-def]
+        # Import here to avoid circular dependency
+        from .chooser import ReusableBlockChooserBlock
+
+        block_types = [
+            ("rich_text", RichTextBlock()),
+            ("raw_html", RawHTMLBlock()),
+            ("image", ImageChooserBlock()),
+            ("reusable_block", ReusableBlockChooserBlock()),
+        ]
+
+        # Try to import ReusableLayoutBlock if available
+        # This will work after ReusableLayoutBlock is defined
+        try:
+            from .layout import ReusableLayoutBlock
+
+            block_types.append(("reusable_layout", ReusableLayoutBlock()))
+        except ImportError:
+            # ReusableLayoutBlock not yet defined, skip it
+            pass
+
+        super().__init__(block_types, **kwargs)
 
 
 class SlotFillBlock(StructBlockType):  # type: ignore[misc]
@@ -51,11 +81,7 @@ class SlotFillBlock(StructBlockType):  # type: ignore[misc]
         label="Slot ID",
     )
 
-    content = StreamBlock(
-        [
-            ("rich_text", RichTextBlock()),
-            ("raw_html", RawHTMLBlock()),
-        ],
+    content = SlotContentStreamBlock(  # type: ignore[no-untyped-call]
         help_text="Content to inject into this slot",
         label="Slot Content",
     )
@@ -66,6 +92,7 @@ class SlotFillBlock(StructBlockType):  # type: ignore[misc]
         help_text = "Fill a specific slot with content"
 
 
-# Note: This will be extended with additional block types in a follow-up
-# to support ReusableBlockChooserBlock and ReusableLayoutBlock (recursive nesting)
-# after those blocks are implemented.
+# Nesting support (Issue #49):
+# - reusable_block: Include ReusableBlock content (v0.1.0 feature)
+# - reusable_layout: Include ReusableLayoutBlock (v0.2.0 feature, recursive!)
+# - Lazy imports prevent circular dependency between SlotFillBlock and ReusableLayoutBlock
