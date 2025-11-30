@@ -199,22 +199,91 @@ class ReusableBlock(index.Indexed, models.Model):  # type: ignore[misc]
     def _get_referenced_blocks(self) -> list["ReusableBlock"]:
         """Extract all ReusableBlock references from the content StreamField.
 
+        Extended in v0.2.0 to also check ReusableLayoutBlock slot content.
+
         Returns:
             List of ReusableBlock instances referenced in the content.
         """
-        from ..blocks import ReusableBlockChooserBlock
+        from ..blocks import ReusableBlockChooserBlock, ReusableLayoutBlock
 
         referenced_blocks: list[ReusableBlock] = []
 
         # Iterate through all blocks in the content StreamField
         for block in self.content:
-            # Check if this is a ReusableBlockChooserBlock
+            # v0.1.0: Check ReusableBlockChooserBlock
             if isinstance(block.block, ReusableBlockChooserBlock):
                 # block.value contains the selected ReusableBlock instance
                 if block.value and isinstance(block.value, ReusableBlock):
                     referenced_blocks.append(block.value)
 
+            # v0.2.0: Check ReusableLayoutBlock
+            elif isinstance(block.block, ReusableLayoutBlock):
+                layout_value = block.value
+
+                # Add the layout itself
+                if layout_value and "layout" in layout_value:
+                    layout_block = layout_value["layout"]
+                    if isinstance(layout_block, ReusableBlock):
+                        referenced_blocks.append(layout_block)
+
+                # Check slot content for nested blocks
+                if layout_value and "slot_content" in layout_value:
+                    for slot_fill in layout_value["slot_content"]:
+                        slot_fill_value = slot_fill.value
+                        if "content" in slot_fill_value:
+                            # Recursively check slot content
+                            nested = self._get_blocks_from_streamfield(
+                                slot_fill_value["content"]
+                            )
+                            referenced_blocks.extend(nested)
+
         return referenced_blocks
+
+    def _get_blocks_from_streamfield(
+        self, streamfield_value: Any
+    ) -> list["ReusableBlock"]:
+        """Extract ReusableBlocks from a StreamField value.
+
+        Helper method to recursively find blocks in nested StreamFields.
+
+        Args:
+            streamfield_value: List of BoundBlock instances
+
+        Returns:
+            List of referenced ReusableBlocks
+        """
+        from ..blocks import ReusableBlockChooserBlock, ReusableLayoutBlock
+
+        blocks: list[ReusableBlock] = []
+
+        for bound_block in streamfield_value:
+            block_type = bound_block.block
+
+            # ReusableBlockChooserBlock
+            if isinstance(block_type, ReusableBlockChooserBlock):
+                if bound_block.value and isinstance(bound_block.value, ReusableBlock):
+                    blocks.append(bound_block.value)
+
+            # ReusableLayoutBlock (recursive)
+            elif isinstance(block_type, ReusableLayoutBlock):
+                layout_value = bound_block.value
+
+                # Add layout
+                if "layout" in layout_value:
+                    layout_block = layout_value["layout"]
+                    if isinstance(layout_block, ReusableBlock):
+                        blocks.append(layout_block)
+
+                # Check slot content
+                if "slot_content" in layout_value:
+                    for slot_fill in layout_value["slot_content"]:
+                        if "content" in slot_fill.value:
+                            nested = self._get_blocks_from_streamfield(
+                                slot_fill.value["content"]
+                            )
+                            blocks.extend(nested)
+
+        return blocks
 
     def render(
         self,
