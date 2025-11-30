@@ -69,6 +69,11 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
         label = "Reusable Layout"
         help_text = "Layout template with customizable content slots"
 
+        # Use custom adapter for JavaScript widget
+        from ..widgets import ReusableLayoutBlockAdapter
+
+        adapter_class = ReusableLayoutBlockAdapter
+
     def render(self, value, context=None):  # type: ignore[no-untyped-def]
         """Render the layout with slots filled.
 
