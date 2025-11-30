@@ -14,12 +14,9 @@ from wagtail.search import index
 
 if TYPE_CHECKING:
     from django.template.context import Context
-    from wagtail.search.index import Indexed as IndexedType
-else:
-    IndexedType = index.Indexed  # type: ignore[misc,assignment]
 
 
-class ReusableBlock(IndexedType, models.Model):  # type: ignore[misc]
+class ReusableBlock(index.Indexed, models.Model):  # type: ignore[misc]
     """Reusable content blocks that can be used across multiple pages.
 
     By default, this model is automatically registered as a Wagtail Snippet
