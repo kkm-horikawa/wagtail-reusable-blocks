@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from django.utils.safestring import mark_safe
 from wagtail.blocks import StreamBlock, StructBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
 
@@ -71,20 +72,43 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
     def render(self, value, context=None):  # type: ignore[no-untyped-def]
         """Render the layout with slots filled.
 
-        For now, this is a placeholder. Full implementation will be
-        done in Issue #51 (Rendering Logic).
+        Renders the layout ReusableBlock to HTML, then injects content from
+        slot_fills into the corresponding slot elements. Unfilled slots retain
+        their default content.
 
         Args:
             value: Block value dict with 'layout' and 'slot_content'
-            context: Template context
+            context: Template context (propagated to nested blocks)
 
         Returns:
-            Rendered HTML string
+            Rendered HTML string with slots injected
         """
-        # Placeholder: just render the layout without slot injection
-        # Full implementation in Issue #51
+        from ..utils.rendering import render_layout_with_slots
+
         layout = value["layout"]
-        return layout.render(context)
+        slot_content = value.get("slot_content", [])
+
+        # Render the layout to HTML
+        layout_html = layout.content.render_as_block(context)
+
+        # If no slots to fill, return layout as-is
+        if not slot_content:
+            return mark_safe(layout_html)
+
+        # Convert slot_content StreamField to list of dicts
+        slot_fills = []
+        for slot_fill_block in slot_content:
+            # slot_fill_block is a BoundBlock wrapping SlotFillBlock
+            slot_fill_value = slot_fill_block.value
+            slot_fills.append(
+                {
+                    "slot_id": slot_fill_value["slot_id"],
+                    "content": slot_fill_value["content"],  # List of BoundBlocks
+                }
+            )
+
+        # Render with slots
+        return render_layout_with_slots(layout_html, slot_fills, context)
 
     def get_form_context(self, value, prefix, errors=None):  # type: ignore[no-untyped-def]
         """Add available slots to form context.
