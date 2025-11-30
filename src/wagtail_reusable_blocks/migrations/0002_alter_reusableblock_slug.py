@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('wagtail_reusable_blocks', '0001_initial'),
+        ("wagtail_reusable_blocks", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='reusableblock',
-            name='slug',
-            field=models.SlugField(blank=True, help_text='URL-safe identifier, auto-generated from name', max_length=255, unique=True),
+            model_name="reusableblock",
+            name="slug",
+            field=models.SlugField(
+                blank=True,
+                help_text="URL-safe identifier, auto-generated from name",
+                max_length=255,
+                unique=True,
+            ),
         ),
     ]
