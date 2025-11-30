@@ -6,6 +6,7 @@ from django.utils.safestring import mark_safe
 from wagtail.blocks import StreamBlock, StructBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
 
+from ..widgets import ReusableLayoutBlockAdapter
 from .slot_fill import SlotFillBlock
 
 if TYPE_CHECKING:
@@ -68,10 +69,6 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
         icon = "doc-empty"
         label = "Reusable Layout"
         help_text = "Layout template with customizable content slots"
-
-        # Use custom adapter for JavaScript widget
-        from ..widgets import ReusableLayoutBlockAdapter
-
         adapter_class = ReusableLayoutBlockAdapter
 
     def render(self, value, context=None):  # type: ignore[no-untyped-def]
