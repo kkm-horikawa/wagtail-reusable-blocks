@@ -46,6 +46,45 @@ class SlotChooserWidget {
         if (layoutField.value) {
             this.onLayoutChange(layoutField.value);
         }
+
+        // Use MutationObserver to watch for SlotFill blocks being added
+        // This handles when new SlotFill blocks are added to slot_content StreamField
+        const observer = new MutationObserver((mutations) => {
+            let shouldUpdate = false;
+
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType === 1) { // Element node
+                        // Check if the added node contains slot_id input fields
+                        const hasSlotIdField = node.querySelector &&
+                            node.querySelector('input[name*="slot_id"]');
+
+                        if (hasSlotIdField) {
+                            shouldUpdate = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldUpdate) break;
+            }
+
+            if (shouldUpdate) {
+                // Wait for DOM to be fully rendered
+                setTimeout(() => {
+                    this.updateSlotFields();
+                }, 100);
+            }
+        });
+
+        // Observe the entire document for now
+        // We could optimize this by finding the specific slot_content container
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Store observer reference for cleanup if needed
+        this.observer = observer;
     }
 
     async onLayoutChange(blockId) {
