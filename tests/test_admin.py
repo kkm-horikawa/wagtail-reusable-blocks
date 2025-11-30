@@ -124,14 +124,10 @@ class TestReusableBlockQueryset:
 
         # Filter by created_at date
         today = timezone.now().date()
-        assert (
-            ReusableBlock.objects.filter(created_at__date=today).count() == 1
-        )
+        assert ReusableBlock.objects.filter(created_at__date=today).count() == 1
 
         # Filter by updated_at date
-        assert (
-            ReusableBlock.objects.filter(updated_at__date=today).count() == 1
-        )
+        assert ReusableBlock.objects.filter(updated_at__date=today).count() == 1
 
 
 class TestWagtailHooksRegistration:
@@ -147,9 +143,7 @@ class TestWagtailHooksRegistration:
         # If we got here without errors, the registration succeeded
         assert True
 
-    @override_settings(
-        WAGTAIL_REUSABLE_BLOCKS={"REGISTER_DEFAULT_SNIPPET": False}
-    )
+    @override_settings(WAGTAIL_REUSABLE_BLOCKS={"REGISTER_DEFAULT_SNIPPET": False})
     def test_viewset_not_registered_when_disabled(self):
         """ViewSet is not registered when REGISTER_DEFAULT_SNIPPET is False."""
         # Re-import the module to test the conditional registration
