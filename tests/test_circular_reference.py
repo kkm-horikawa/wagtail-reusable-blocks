@@ -52,7 +52,9 @@ class TestCircularReferenceDetection:
 
     def test_save_calls_clean(self):
         """save() method calls clean() for validation."""
-        block = ReusableBlock(name="Test Block", content=[("rich_text", "<p>Content</p>")])
+        block = ReusableBlock(
+            name="Test Block", content=[("rich_text", "<p>Content</p>")]
+        )
 
         # Should save successfully (no circular ref)
         block.save()
@@ -173,4 +175,6 @@ class TestRenderBasicDepthTracking:
         block_chooser.render_basic(reusable_block, context=context)
 
         # Check that warning was logged
-        assert any("Maximum nesting depth" in record.message for record in caplog.records)
+        assert any(
+            "Maximum nesting depth" in record.message for record in caplog.records
+        )
