@@ -2,7 +2,23 @@
  * Slot Chooser Widget for ReusableLayoutBlock
  *
  * Dynamically populates slot_id dropdowns based on the selected layout.
+ * Extends Wagtail's StructBlockDefinition to add custom slot selection behavior.
  */
+
+class ReusableLayoutBlockDefinition extends window.wagtailStreamField.blocks.StructBlockDefinition {
+    render(placeholder, prefix, initialState, initialError) {
+        const block = super.render(placeholder, prefix, initialState, initialError);
+
+        // Use prefix to find fields (Wagtail's official pattern)
+        const layoutFieldId = prefix + '-layout';
+        const slotContentFieldId = prefix + '-slot_content';
+
+        // Initialize SlotChooserWidget
+        new SlotChooserWidget(layoutFieldId, slotContentFieldId);
+
+        return block;
+    }
+}
 
 class SlotChooserWidget {
     constructor(layoutFieldId, slotContentFieldId) {
@@ -14,10 +30,10 @@ class SlotChooserWidget {
     }
 
     init() {
-        // Find the layout chooser field
-        const layoutField = document.getElementById(this.layoutFieldId);
+        // SnippetChooser creates a hidden input with the actual value
+        // The field ID points to the container, we need to find the hidden input
+        const layoutField = document.querySelector(`input[name="${this.layoutFieldId}"]`);
         if (!layoutField) {
-            console.warn(`Layout field ${this.layoutFieldId} not found`);
             return;
         }
 
@@ -30,6 +46,45 @@ class SlotChooserWidget {
         if (layoutField.value) {
             this.onLayoutChange(layoutField.value);
         }
+
+        // Use MutationObserver to watch for SlotFill blocks being added
+        // This handles when new SlotFill blocks are added to slot_content StreamField
+        const observer = new MutationObserver((mutations) => {
+            let shouldUpdate = false;
+
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType === 1) { // Element node
+                        // Check if the added node contains slot_id input fields
+                        const hasSlotIdField = node.querySelector &&
+                            node.querySelector('input[name*="slot_id"]');
+
+                        if (hasSlotIdField) {
+                            shouldUpdate = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldUpdate) break;
+            }
+
+            if (shouldUpdate) {
+                // Wait for DOM to be fully rendered
+                setTimeout(() => {
+                    this.updateSlotFields();
+                }, 100);
+            }
+        });
+
+        // Observe the entire document for now
+        // We could optimize this by finding the specific slot_content container
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Store observer reference for cleanup if needed
+        this.observer = observer;
     }
 
     async onLayoutChange(blockId) {
@@ -60,11 +115,18 @@ class SlotChooserWidget {
 
     updateSlotFields() {
         // Find all slot_id fields within slot_content
-        const slotIdFields = document.querySelectorAll(
-            `[id^="${this.slotContentFieldId}"] input[name$="slot_id"]`
+        let slotIdFields = document.querySelectorAll(
+            `input[name*="${this.slotContentFieldId}"][name*="slot_id"]`
         );
 
-        slotIdFields.forEach(field => {
+        // If not found, try alternative selector
+        if (slotIdFields.length === 0) {
+            slotIdFields = document.querySelectorAll(
+                `input[name^="${this.slotContentFieldId}"][name$="-slot_id"]`
+            );
+        }
+
+        slotIdFields.forEach((field) => {
             this.convertToDropdown(field);
         });
     }
@@ -150,5 +212,8 @@ class SlotChooserWidget {
     }
 }
 
-// Export for use in Wagtail admin
-window.SlotChooserWidget = SlotChooserWidget;
+// Register with Wagtail's telepath system
+window.telepath.register(
+    'wagtail_reusable_blocks.blocks.ReusableLayoutBlock',
+    ReusableLayoutBlockDefinition
+);
