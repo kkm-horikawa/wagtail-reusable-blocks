@@ -1,10 +1,17 @@
 """ReusableBlock model for wagtail-reusable-blocks."""
 
+from typing import TYPE_CHECKING, Any
+
 from django.db import models
+from django.template.loader import render_to_string
+from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import slugify
 from wagtail.admin.panels import FieldPanel
 from wagtail.blocks import RawHTMLBlock, RichTextBlock
 from wagtail.fields import StreamField
+
+if TYPE_CHECKING:
+    from django.template.context import Context
 
 
 class ReusableBlock(models.Model):
@@ -118,3 +125,64 @@ class ReusableBlock(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+    def render(
+        self,
+        context: "dict[str, Any] | Context | None" = None,
+        template: str | None = None,
+    ) -> SafeString:
+        """Render the reusable block using a template.
+
+        Args:
+            context: Additional context to pass to the template.
+                     Can be a dict or Django Context object.
+                     Parent context is automatically included.
+            template: Template path override. If not provided, uses the
+                     TEMPLATE setting from WAGTAIL_REUSABLE_BLOCKS.
+
+        Returns:
+            Rendered HTML as a SafeString.
+
+        Raises:
+            TemplateDoesNotExist: If the specified template cannot be found.
+                                  Check TEMPLATES['DIRS'] in settings.
+
+        Example:
+            >>> block = ReusableBlock.objects.get(slug='my-block')
+            >>> html = block.render()
+            >>> # With custom context (dict)
+            >>> html = block.render(context={'page': page_object})
+            >>> # With Django Context
+            >>> from django.template import Context
+            >>> html = block.render(context=Context({'page': page_object}))
+            >>> # With custom template
+            >>> html = block.render(template='custom/template.html')
+        """
+        from django.template import TemplateDoesNotExist
+
+        from ..conf import get_setting
+
+        template_name = template or get_setting("TEMPLATE")
+
+        # Convert context to dict if needed (handles both dict and Context)
+        render_context: dict[str, Any] = dict(context) if context else {}
+        render_context["block"] = self
+
+        try:
+            return mark_safe(render_to_string(template_name, render_context))
+        except TemplateDoesNotExist as e:
+            # Provide helpful error message
+            if template:
+                msg = (
+                    f"Template '{template_name}' not found. "
+                    f"Make sure it exists in one of your TEMPLATES['DIRS'] "
+                    f"or app template directories."
+                )
+            else:
+                msg = (
+                    f"Default template '{template_name}' not found. "
+                    f"This may indicate a package installation issue. "
+                    f"Try reinstalling wagtail-reusable-blocks or set a custom "
+                    f"template via WAGTAIL_REUSABLE_BLOCKS['TEMPLATE']."
+                )
+            raise TemplateDoesNotExist(msg) from e

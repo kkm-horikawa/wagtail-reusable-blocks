@@ -66,6 +66,20 @@ version_scheme = "no-guess-dev"
 [tool.hatch.build.targets.wheel]
 packages = ["src/wagtail_reusable_blocks"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.hatch.build]
+include = [
+    "src/wagtail_reusable_blocks/**/*.py",
+    "src/wagtail_reusable_blocks/templates/**/*.html",
+]
+
 [tool.ruff]
 line-length = 88
 target-version = "py310"
