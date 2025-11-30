@@ -9,7 +9,11 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         from .models import ReusableBlock
 
         return ReusableBlock
+    if name == "ReusableBlockChooserBlock":
+        from .blocks import ReusableBlockChooserBlock
+
+        return ReusableBlockChooserBlock
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["ReusableBlock"]
+__all__ = ["ReusableBlock", "ReusableBlockChooserBlock"]
