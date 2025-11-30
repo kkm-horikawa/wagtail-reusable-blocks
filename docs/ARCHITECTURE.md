@@ -133,12 +133,20 @@ graph LR
     Content --> Result
 ```
 
-**Key Decision: Slots are StreamField blocks, not template tags**
+**Key Decision: HTML Attribute-Based Slots**
 
-Why not Django template tags?
-- Template tags require code deployment
-- Our goal is **no-deploy content changes**
-- StreamField blocks can be managed in admin
+Why `data-slot` attributes instead of custom block types?
+
+1. **Flexibility** - Designers can write any HTML structure
+2. **No code deployment** - Just edit HTML in admin
+3. **Standard HTML** - No custom tags, works in any editor
+4. **Self-documenting** - `<div data-slot="main"></div>` is clear
+
+**Alternatives considered:**
+
+- **Custom StreamField blocks** - Too rigid, requires code for each slot type
+- **Template tags** - Requires code deployment, defeats the purpose
+- **Custom XML tags** - Non-standard, poor editor support
 
 **Key Decision: Store slot content in the page, not in the ReusableBlock**
 
@@ -148,27 +156,67 @@ Why not Django template tags?
 
 ## Data Flow
 
-### Rendering a ReusableBlock with Slots
+### Rendering a ReusableLayoutBlock with Slots (v0.2.0)
 
 ```mermaid
 flowchart TD
-    A["Page.body renders"] --> B["Encounters ReusableBlockWithSlotsBlock"]
-    B --> C["Load ReusableBlock from DB"]
-    C --> D["Parse content for SlotPlaceholderBlocks"]
-    D --> E{"For each Slot"}
-    E --> F{"Matching SlotFill exists?"}
-    F -->|"Yes"| G["Render SlotFill.content"]
-    F -->|"No"| H["Render default_content"]
-    G --> I["Combine all rendered parts"]
-    H --> I
-    I --> J["Return complete HTML"]
+    A["Page.body renders"] --> B["Encounters ReusableLayoutBlock"]
+    B --> C["Load layout ReusableBlock from DB"]
+    C --> D["Render layout.content to HTML"]
+    D --> E["Parse HTML with BeautifulSoup"]
+    E --> F["Find all elements with data-slot attribute"]
+    F --> G{"For each slot element"}
+    G --> H{"Matching SlotFill exists?"}
+    H -->|"Yes"| I["Render SlotFill.content to HTML"]
+    H -->|"No"| J["Keep existing child elements as default"]
+    I --> K["Replace slot element's children with rendered content"]
+    J --> L["Keep slot element unchanged"]
+    K --> M["Continue to next slot"]
+    L --> M
+    M --> G
+    G -->|"All slots processed"| N["Convert BeautifulSoup back to HTML"]
+    N --> O["Return complete HTML"]
 ```
 
-### Circular Reference Detection
+**Detailed Slot Rendering Flow**
+
+1. **Layout Rendering**: First render the layout block's content as normal HTML
+   ```python
+   layout_html = self.layout.content.render_as_block()
+   ```
+
+2. **HTML Parsing**: Parse the HTML using BeautifulSoup
+   ```python
+   soup = BeautifulSoup(layout_html, 'html.parser')
+   ```
+
+3. **Slot Detection**: Find all elements with `data-slot` attribute
+   ```python
+   slot_elements = soup.find_all(attrs={settings.SLOT_ATTRIBUTE: True})
+   ```
+
+4. **Slot Filling**: For each slot element:
+   - Get the `slot_id` from the `data-slot` attribute
+   - Find matching `SlotFillBlock` in `slot_content`
+   - If found: render the SlotFill's content and replace slot's children
+   - If not found: keep existing children as default content
+
+5. **HTML Assembly**: Convert the modified BeautifulSoup object back to HTML
+
+**Performance Characteristics:**
+
+- Slot detection: O(n) where n = number of HTML elements
+- Rendering: O(m) where m = number of filled slots
+- No database queries during slot filling (all data pre-loaded)
+- Future optimization: Cache rendered HTML (v0.3.0)
+
+### Circular Reference Detection (v0.1.0 + v0.2.0)
+
+**v0.1.0: ReusableBlockChooserBlock Nesting**
 
 ```mermaid
 flowchart TD
-    A["Save ReusableBlock"] --> B["Scan content for references"]
+    A["Save ReusableBlock"] --> B["Scan content for ReusableBlockChooserBlock"]
     B --> C{"References other ReusableBlock?"}
     C -->|"No"| D["Safe to save"]
     C -->|"Yes"| E["Add to visited set"]
@@ -180,11 +228,34 @@ flowchart TD
     G --> J["Show error with reference chain"]
 ```
 
+**v0.2.0: Extended for ReusableLayoutBlock**
+
+The circular reference detection in v0.2.0 also checks:
+
+1. **Layout references**: ReusableLayoutBlock → ReusableBlock (layout)
+2. **Slot fill references**: SlotFillBlock → ReusableBlockChooserBlock
+3. **Nested layout references**: ReusableLayoutBlock in SlotFillBlock
+
+Example of detected circular reference:
+```
+Layout A (via ReusableLayoutBlock)
+└─ slot "content"
+   └─ Layout B (via ReusableLayoutBlock, nested)
+      └─ slot "main"
+         └─ Layout A (via ReusableLayoutBlock) ❌ CIRCULAR!
+```
+
+Error message:
+```
+Circular reference detected: Layout A → Layout B → Layout A
+```
+
 **Key Decision: Detect at save time, not render time**
 
 - Fail fast: catch errors when editor saves
 - Better UX: clear error message with reference chain
 - Performance: no runtime overhead
+- Works for both v0.1.0 and v0.2.0 block types
 
 ## Model Relationships
 
@@ -277,6 +348,10 @@ When you return to this project, you should be able to answer:
 |----------|--------|
 | Why did we build this? | Reusable content with single source of truth |
 | Why not use Wagtail CRX? | Too heavy, we need lightweight package |
-| Why slots? | Enable layout templates without code deployment |
-| Why detect circular refs at save time? | Better UX, fail fast |
+| Why slots (v0.2.0)? | Enable layout templates without code deployment |
+| Why `data-slot` attributes? | Standard HTML, no code deployment, self-documenting |
+| Why BeautifulSoup for parsing? | Robust HTML parsing, handles any HTML structure |
+| Why detect circular refs at save time? | Better UX, fail fast with clear error messages |
 | Why store slot content in page? | Same layout, different content per page |
+| Why JavaScript widget for slots? | Better UX - auto-populated dropdowns instead of text input |
+| Can v0.1.0 and v0.2.0 coexist? | Yes! Fully backward compatible, use both in same page |
