@@ -138,7 +138,7 @@ class TestSlotBasedTemplatingE2E:
         assert "Default for slot1" not in html
         assert "Default for slot2" in html  # Unfilled, shows default
 
-    @pytest.mark.skip(reason="BeautifulSoup append issue with nested layouts - see Issue #XX")
+    @pytest.mark.skip(reason="BeautifulSoup append issue with nested layouts - see Issue #62")
     def test_nested_layouts(self):
         """Test nested ReusableLayoutBlock within slots."""
         # Create outer layout
