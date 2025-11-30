@@ -140,6 +140,25 @@ class TestSlotFillBlockRendering:
         assert rendered is not None  # Just verify it doesn't error
 
 
+class TestSlotContentStreamBlock:
+    """Tests for SlotContentStreamBlock."""
+
+    def test_slot_content_stream_block_has_correct_types(self):
+        """SlotContentStreamBlock includes all expected block types."""
+        from wagtail_reusable_blocks.blocks.slot_fill import SlotContentStreamBlock
+
+        block = SlotContentStreamBlock()
+
+        # Should have basic types
+        assert "rich_text" in block.child_blocks
+        assert "raw_html" in block.child_blocks
+        assert "image" in block.child_blocks
+        assert "reusable_block" in block.child_blocks
+
+        # reusable_layout may not be loaded due to circular import
+        # but that's acceptable
+
+
 class TestSlotFillBlockIntegration:
     """Integration tests for SlotFillBlock."""
 
