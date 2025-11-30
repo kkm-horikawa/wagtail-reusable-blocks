@@ -8,24 +8,14 @@ class TestReusableLayoutBlockAdapter:
     """Tests for ReusableLayoutBlockAdapter."""
 
     def test_adapter_includes_javascript(self):
-        """Adapter includes slot-chooser.js."""
+        """Adapter includes slot-chooser.js with auto-initialization."""
         adapter = ReusableLayoutBlockAdapter()
 
         media = adapter.media
         js_files = [str(js) for js in media._js]
 
+        # Should include slot-chooser.js (auto-initializes on DOM ready)
         assert any("slot-chooser.js" in js for js in js_files)
-
-    def test_adapter_js_initializer(self):
-        """Adapter provides JS initializer."""
-        adapter = ReusableLayoutBlockAdapter()
-        adapter.id = "test-block"
-
-        initializer = adapter.js_initializer()
-
-        assert "SlotChooserWidget" in initializer
-        assert "test-block-layout" in initializer
-        assert "test-block-slot_content" in initializer
 
 
 class TestReusableLayoutBlockIntegration:

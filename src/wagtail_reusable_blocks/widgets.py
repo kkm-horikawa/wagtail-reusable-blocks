@@ -20,7 +20,3 @@ class ReusableLayoutBlockAdapter(StructBlockAdapter):  # type: ignore[misc]
                 "wagtail_reusable_blocks/js/slot-chooser.js",
             ]
         )
-
-    def js_initializer(self) -> str:
-        """Initialize SlotChooserWidget on the client side."""
-        return f"new SlotChooserWidget('{self.id}-layout', '{self.id}-slot_content')"
