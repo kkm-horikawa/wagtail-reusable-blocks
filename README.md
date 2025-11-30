@@ -2,6 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/wagtail-reusable-blocks.svg)](https://badge.fury.io/py/wagtail-reusable-blocks)
 [![CI](https://github.com/kkm-horikawa/wagtail-reusable-blocks/actions/workflows/ci.yml/badge.svg)](https://github.com/kkm-horikawa/wagtail-reusable-blocks/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/kkm-horikawa/wagtail-reusable-blocks/branch/develop/graph/badge.svg)](https://codecov.io/gh/kkm-horikawa/wagtail-reusable-blocks)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 A Wagtail CMS extension for creating **reusable content blocks** with an advanced **slot-based templating system**.
