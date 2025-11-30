@@ -9,15 +9,12 @@ class ReusableLayoutBlockDefinition extends window.wagtailStreamField.blocks.Str
     render(placeholder, prefix, initialState, initialError) {
         const block = super.render(placeholder, prefix, initialState, initialError);
 
-        // Initialize SlotChooserWidget for this block
-        const layoutField = block.container.querySelector('input[name$="-layout"]');
-        const slotContentContainer = block.container.querySelector('[data-streamfield-stream-container]');
+        // Use prefix to find fields (Wagtail's official pattern)
+        const layoutFieldId = prefix + '-layout';
+        const slotContentFieldId = prefix + '-slot_content';
 
-        if (layoutField && slotContentContainer) {
-            const layoutFieldId = layoutField.id;
-            const slotContentFieldId = slotContentContainer.id || layoutFieldId.replace('-layout', '-slot_content');
-            new SlotChooserWidget(layoutFieldId, slotContentFieldId);
-        }
+        // Initialize SlotChooserWidget
+        new SlotChooserWidget(layoutFieldId, slotContentFieldId);
 
         return block;
     }
@@ -33,10 +30,10 @@ class SlotChooserWidget {
     }
 
     init() {
-        // Find the layout chooser field
-        const layoutField = document.getElementById(this.layoutFieldId);
+        // SnippetChooser creates a hidden input with the actual value
+        // The field ID points to the container, we need to find the hidden input
+        const layoutField = document.querySelector(`input[name="${this.layoutFieldId}"]`);
         if (!layoutField) {
-            console.warn(`Layout field ${this.layoutFieldId} not found`);
             return;
         }
 
@@ -79,11 +76,18 @@ class SlotChooserWidget {
 
     updateSlotFields() {
         // Find all slot_id fields within slot_content
-        const slotIdFields = document.querySelectorAll(
-            `[id^="${this.slotContentFieldId}"] input[name$="slot_id"]`
+        let slotIdFields = document.querySelectorAll(
+            `input[name*="${this.slotContentFieldId}"][name*="slot_id"]`
         );
 
-        slotIdFields.forEach(field => {
+        // If not found, try alternative selector
+        if (slotIdFields.length === 0) {
+            slotIdFields = document.querySelectorAll(
+                `input[name^="${this.slotContentFieldId}"][name$="-slot_id"]`
+            );
+        }
+
+        slotIdFields.forEach((field) => {
             this.convertToDropdown(field);
         });
     }
