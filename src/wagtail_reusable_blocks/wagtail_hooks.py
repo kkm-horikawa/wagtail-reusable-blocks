@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from django.urls import include, path
+from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import UpdatedAtColumn
 from wagtail.snippets.models import register_snippet
@@ -76,3 +78,20 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
 # This prevents double registration
 if get_setting("REGISTER_DEFAULT_SNIPPET"):
     register_snippet(ReusableBlockViewSet)
+
+
+@hooks.register("register_admin_urls")  # type: ignore[untyped-decorator]
+def register_admin_urls() -> list[object]:
+    """Register URL patterns for the Wagtail admin.
+
+    Registers API endpoints for slot detection and other admin functionality.
+    URLs are prefixed with 'admin/reusable-blocks/'.
+    """
+    from . import urls
+
+    return [
+        path(
+            "reusable-blocks/",
+            include((urls, "wagtail_reusable_blocks"), namespace="wagtail_reusable_blocks"),
+        ),
+    ]
