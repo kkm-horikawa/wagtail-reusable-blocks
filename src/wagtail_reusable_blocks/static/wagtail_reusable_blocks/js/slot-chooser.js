@@ -2,7 +2,26 @@
  * Slot Chooser Widget for ReusableLayoutBlock
  *
  * Dynamically populates slot_id dropdowns based on the selected layout.
+ * Extends Wagtail's StructBlockDefinition to add custom slot selection behavior.
  */
+
+class ReusableLayoutBlockDefinition extends window.wagtailStreamField.blocks.StructBlockDefinition {
+    render(placeholder, prefix, initialState, initialError) {
+        const block = super.render(placeholder, prefix, initialState, initialError);
+
+        // Initialize SlotChooserWidget for this block
+        const layoutField = block.container.querySelector('input[name$="-layout"]');
+        const slotContentContainer = block.container.querySelector('[data-streamfield-stream-container]');
+
+        if (layoutField && slotContentContainer) {
+            const layoutFieldId = layoutField.id;
+            const slotContentFieldId = slotContentContainer.id || layoutFieldId.replace('-layout', '-slot_content');
+            new SlotChooserWidget(layoutFieldId, slotContentFieldId);
+        }
+
+        return block;
+    }
+}
 
 class SlotChooserWidget {
     constructor(layoutFieldId, slotContentFieldId) {
@@ -150,47 +169,8 @@ class SlotChooserWidget {
     }
 }
 
-// Export for use in Wagtail admin
-window.SlotChooserWidget = SlotChooserWidget;
-
-// Auto-initialize for ReusableLayoutBlock instances
-document.addEventListener('DOMContentLoaded', function() {
-    initializeSlotChoosers();
-});
-
-// Also listen for StreamField block additions
-document.addEventListener('wagtail:block-insert', function() {
-    initializeSlotChoosers();
-});
-
-function initializeSlotChoosers() {
-    // Find all ReusableLayoutBlock instances by looking for snippet chooser fields
-    // followed by slot_content fields
-    const snippetChoosers = document.querySelectorAll('[data-chooser-modal-url*="ReusableBlock"]');
-
-    snippetChoosers.forEach(chooser => {
-        // Get the parent struct block container
-        const structBlock = chooser.closest('[data-block]');
-        if (!structBlock) return;
-
-        // Find layout input field
-        const layoutInput = structBlock.querySelector('input[name$="-layout"]');
-        if (!layoutInput) return;
-
-        // Find slot_content container
-        const slotContentContainer = structBlock.querySelector('[data-streamfield-stream-container]');
-        if (!slotContentContainer) return;
-
-        // Check if already initialized
-        if (layoutInput.dataset.slotChooserInitialized === 'true') return;
-
-        // Mark as initialized
-        layoutInput.dataset.slotChooserInitialized = 'true';
-
-        // Initialize widget
-        const layoutFieldId = layoutInput.id;
-        const slotContentFieldId = slotContentContainer.id || layoutFieldId.replace('-layout', '-slot_content');
-
-        new SlotChooserWidget(layoutFieldId, slotContentFieldId);
-    });
-}
+// Register with Wagtail's telepath system
+window.telepath.register(
+    'wagtail_reusable_blocks.blocks.ReusableLayoutBlock',
+    ReusableLayoutBlockDefinition
+);

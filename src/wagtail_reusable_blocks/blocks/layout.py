@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from django.utils.safestring import mark_safe
+from wagtail.admin.telepath import register
 from wagtail.blocks import StreamBlock, StructBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
 
@@ -131,3 +132,7 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
             context["available_slots"] = slots
 
         return context
+
+
+# Register the custom adapter with telepath
+register(ReusableLayoutBlockAdapter(), ReusableLayoutBlock)
