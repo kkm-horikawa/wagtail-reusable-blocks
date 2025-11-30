@@ -56,13 +56,16 @@ class ReusableBlockChooserBlock(SnippetChooserBlockType):  # type: ignore[misc]
     ) -> SafeString | str:
         """Render the selected ReusableBlock's content.
 
+        Implements depth tracking to prevent infinite recursion from nested blocks.
+        If maximum nesting depth is exceeded, shows a warning message instead.
+
         Args:
             value: The selected ReusableBlock instance, or None
             context: Template context to pass to the block's render method
 
         Returns:
             Rendered HTML from the ReusableBlock's template, or empty string
-            if value is None or deleted.
+            if value is None or deleted. Returns warning message if max depth exceeded.
 
         Example:
             >>> block = ReusableBlockChooserBlock()
@@ -73,9 +76,40 @@ class ReusableBlockChooserBlock(SnippetChooserBlockType):  # type: ignore[misc]
         if value is None:
             return ""
 
+        # Initialize context if None
+        if context is None:
+            context = {}
+
+        # Track nesting depth to prevent infinite recursion
+        current_depth = context.get("_reusable_block_depth", 0)
+
+        # Get max depth from settings
+        from ..conf import get_setting
+
+        max_depth = get_setting("MAX_NESTING_DEPTH")
+
+        # Check if we've exceeded maximum nesting depth
+        if current_depth >= max_depth:
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Maximum nesting depth ({max_depth}) exceeded for "
+                f"ReusableBlock '{value.name}' (id={value.pk})"
+            )
+            return (
+                '<div class="reusable-block-max-depth-warning">'
+                "Maximum nesting depth exceeded"
+                "</div>"
+            )
+
         try:
+            # Increment depth for nested rendering
+            nested_context = context.copy()
+            nested_context["_reusable_block_depth"] = current_depth + 1
+
             # Pass the context to the block's render method
-            return value.render(context=context)
+            return value.render(context=nested_context)
         except Exception:
             # Handle deleted blocks or rendering errors gracefully
             # Return empty string instead of breaking the page
