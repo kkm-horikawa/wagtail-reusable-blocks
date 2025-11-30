@@ -2,8 +2,35 @@
 
 import pytest
 from django.core.exceptions import ValidationError
+from wagtail.blocks import RawHTMLBlock, RichTextBlock
+from wagtail.fields import StreamField
 
+from wagtail_reusable_blocks.blocks import ReusableBlockChooserBlock
 from wagtail_reusable_blocks.models import ReusableBlock
+
+
+# Test helper: Add ReusableBlockChooserBlock to content dynamically
+def add_nested_block_to_content(block, nested_block):
+    """Add a ReusableBlockChooserBlock reference to a block's content.
+
+    This simulates user-created models that include ReusableBlockChooserBlock
+    in their StreamField definition.
+    """
+    from wagtail.blocks.stream_block import StreamValue
+
+    # Get the existing content
+    existing_content = list(block.content)
+
+    # Add a reusable_block entry
+    # We need to create a StreamValue.StreamChild manually
+    stream_block = block.content.stream_block
+
+    # Add the nested block as a new stream child
+    existing_content.append(("reusable_block", nested_block))
+
+    # Update the content
+    block.content = existing_content
+    return block
 
 
 @pytest.mark.django_db
@@ -80,6 +107,170 @@ class TestNestingDepthConfiguration:
 
         max_depth = get_setting("MAX_NESTING_DEPTH")
         assert max_depth == 10
+
+
+@pytest.mark.django_db
+class TestCircularReferenceWithNesting:
+    """Tests for circular reference detection with actual nested blocks."""
+
+    @pytest.fixture(autouse=True)
+    def patch_streamfield(self, monkeypatch):
+        """Patch ReusableBlock's content field to include ReusableBlockChooserBlock."""
+        from wagtail.blocks import StreamBlock
+
+        from wagtail_reusable_blocks.blocks import ReusableBlockChooserBlock
+
+        new_child_blocks = [
+            ("rich_text", RichTextBlock()),
+            ("raw_html", RawHTMLBlock()),
+            ("reusable_block", ReusableBlockChooserBlock()),
+        ]
+
+        new_stream_block = StreamBlock(new_child_blocks, required=False)
+        monkeypatch.setattr(
+            ReusableBlock.content.field, "stream_block", new_stream_block
+        )
+
+    def test_actual_circular_reference_detected(self):
+        """Detect circular reference: A → B → A."""
+        # Create block A
+        block_a = ReusableBlock.objects.create(
+            name="Block A", content=[("rich_text", "<p>A</p>")]
+        )
+
+        # Create block B
+        block_b = ReusableBlock.objects.create(
+            name="Block B", content=[("rich_text", "<p>B</p>")]
+        )
+
+        # Make A reference B
+        block_a.content = [("reusable_block", block_b)]
+        block_a.save()
+
+        # Make B reference A (creates cycle)
+        block_b.content = [("reusable_block", block_a)]
+
+        # Should raise ValidationError
+        with pytest.raises(ValidationError, match="Circular reference detected"):
+            block_b.save()
+
+    def test_actual_self_reference_detected(self):
+        """Detect self-reference: A → A."""
+        # Create block A
+        block_a = ReusableBlock.objects.create(
+            name="Block A", content=[("rich_text", "<p>A</p>")]
+        )
+
+        # Make A reference itself
+        block_a.content = [("reusable_block", block_a)]
+
+        # Should raise ValidationError
+        with pytest.raises(ValidationError, match="Circular reference detected"):
+            block_a.save()
+
+    def test_actual_three_way_cycle_detected(self):
+        """Detect three-way cycle: A → B → C → A."""
+        # Create blocks
+        block_a = ReusableBlock.objects.create(
+            name="Block A", content=[("rich_text", "<p>A</p>")]
+        )
+        block_b = ReusableBlock.objects.create(
+            name="Block B", content=[("rich_text", "<p>B</p>")]
+        )
+        block_c = ReusableBlock.objects.create(
+            name="Block C", content=[("rich_text", "<p>C</p>")]
+        )
+
+        # A → B
+        block_a.content = [("reusable_block", block_b)]
+        block_a.save()
+
+        # B → C
+        block_b.content = [("reusable_block", block_c)]
+        block_b.save()
+
+        # C → A (creates cycle)
+        block_c.content = [("reusable_block", block_a)]
+
+        # Should raise ValidationError
+        with pytest.raises(ValidationError, match="Circular reference detected"):
+            block_c.save()
+
+    def test_linear_chain_allowed(self):
+        """Linear chain without cycle should work: A → B → C."""
+        # Create blocks
+        block_a = ReusableBlock.objects.create(
+            name="Block A", content=[("rich_text", "<p>A</p>")]
+        )
+        block_b = ReusableBlock.objects.create(
+            name="Block B", content=[("rich_text", "<p>B</p>")]
+        )
+        block_c = ReusableBlock.objects.create(
+            name="Block C", content=[("rich_text", "<p>C</p>")]
+        )
+
+        # A → B
+        block_a.content = [("reusable_block", block_b)]
+        block_a.save()
+
+        # B → C
+        block_b.content = [("reusable_block", block_c)]
+        block_b.save()
+
+        # Should succeed (no cycle)
+        assert block_a.pk is not None
+        assert block_b.pk is not None
+
+    def test_get_referenced_blocks_finds_nested(self):
+        """_get_referenced_blocks finds nested ReusableBlockChooserBlock."""
+        # Create blocks
+        block_a = ReusableBlock.objects.create(
+            name="Block A", content=[("rich_text", "<p>A</p>")]
+        )
+        block_b = ReusableBlock.objects.create(
+            name="Block B", content=[("rich_text", "<p>B</p>")]
+        )
+
+        # A → B
+        block_a.content = [("reusable_block", block_b)]
+        block_a.save()
+
+        # Get referenced blocks
+        referenced = block_a._get_referenced_blocks()
+
+        # Should find block_b
+        assert len(referenced) == 1
+        assert referenced[0].pk == block_b.pk
+
+    def test_multiple_references_found(self):
+        """_get_referenced_blocks finds multiple nested blocks."""
+        # Create blocks
+        block_a = ReusableBlock.objects.create(
+            name="Block A", content=[("rich_text", "<p>A</p>")]
+        )
+        block_b = ReusableBlock.objects.create(
+            name="Block B", content=[("rich_text", "<p>B</p>")]
+        )
+        block_c = ReusableBlock.objects.create(
+            name="Block C", content=[("rich_text", "<p>C</p>")]
+        )
+
+        # A → B and C
+        block_a.content = [
+            ("reusable_block", block_b),
+            ("rich_text", "<p>Middle</p>"),
+            ("reusable_block", block_c),
+        ]
+        block_a.save()
+
+        # Get referenced blocks
+        referenced = block_a._get_referenced_blocks()
+
+        # Should find both blocks
+        assert len(referenced) == 2
+        referenced_pks = {b.pk for b in referenced}
+        assert block_b.pk in referenced_pks
+        assert block_c.pk in referenced_pks
 
 
 @pytest.mark.django_db
