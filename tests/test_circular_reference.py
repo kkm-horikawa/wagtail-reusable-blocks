@@ -3,34 +3,8 @@
 import pytest
 from django.core.exceptions import ValidationError
 from wagtail.blocks import RawHTMLBlock, RichTextBlock
-from wagtail.fields import StreamField
 
-from wagtail_reusable_blocks.blocks import ReusableBlockChooserBlock
 from wagtail_reusable_blocks.models import ReusableBlock
-
-
-# Test helper: Add ReusableBlockChooserBlock to content dynamically
-def add_nested_block_to_content(block, nested_block):
-    """Add a ReusableBlockChooserBlock reference to a block's content.
-
-    This simulates user-created models that include ReusableBlockChooserBlock
-    in their StreamField definition.
-    """
-    from wagtail.blocks.stream_block import StreamValue
-
-    # Get the existing content
-    existing_content = list(block.content)
-
-    # Add a reusable_block entry
-    # We need to create a StreamValue.StreamChild manually
-    stream_block = block.content.stream_block
-
-    # Add the nested block as a new stream child
-    existing_content.append(("reusable_block", nested_block))
-
-    # Update the content
-    block.content = existing_content
-    return block
 
 
 @pytest.mark.django_db
