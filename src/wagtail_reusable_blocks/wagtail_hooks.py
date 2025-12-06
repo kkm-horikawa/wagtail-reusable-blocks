@@ -6,7 +6,7 @@ from django.urls import include, path, reverse
 from django.utils.safestring import mark_safe
 from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
-from wagtail.admin.ui.tables import UpdatedAtColumn
+from wagtail.admin.ui.tables import LiveStatusTagColumn, UpdatedAtColumn
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -42,8 +42,12 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
     Features:
         - Search by name and slug
         - Filter by creation and update dates
-        - Display name, slug, and last updated timestamp
+        - Display name, slug, live status, and last updated timestamp
         - Default ordering by most recently updated
+        - Draft/publish workflow support
+        - Locking support
+        - Revision history
+        - Preview functionality
     """
 
     model = ReusableBlock
@@ -55,10 +59,11 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
     # Search configuration
     search_fields = ["name", "slug"]
 
-    # List display configuration
+    # List display configuration (includes live status for DraftStateMixin)
     list_display = [
         "name",
         "slug",
+        LiveStatusTagColumn(),
         UpdatedAtColumn(),
     ]
     list_per_page = 50
@@ -74,6 +79,9 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
 
     # Enable inspect view for read-only preview
     inspect_view_enabled = True
+
+    # Enable preview (for PreviewableMixin)
+    preview_enabled = True
 
 
 # Register the custom viewset only if default registration is enabled
