@@ -71,7 +71,8 @@ class ReusableBlockCache:
         Returns:
             Cache key prefix string
         """
-        return get_setting("CACHE_PREFIX")
+        prefix: str = get_setting("CACHE_PREFIX")
+        return prefix
 
     @classmethod
     def get_timeout(cls) -> int:
@@ -80,7 +81,8 @@ class ReusableBlockCache:
         Returns:
             Cache timeout in seconds
         """
-        return get_setting("CACHE_TIMEOUT")
+        timeout: int = get_setting("CACHE_TIMEOUT")
+        return timeout
 
     @classmethod
     def get_cache_key(
@@ -141,7 +143,7 @@ class ReusableBlockCache:
 
         key = cls.get_cache_key(block_id, slot_content)
         cache = cls.get_cache()
-        cached = cache.get(key)
+        cached: str | None = cache.get(key)
 
         if cached is not None:
             logger.debug(f"Cache hit for ReusableBlock {block_id} (key={key})")

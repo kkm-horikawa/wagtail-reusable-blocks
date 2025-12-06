@@ -228,3 +228,80 @@ class TestReusableBlockCacheIntegration(TestCase):
         # Invalidate
         ReusableBlockCache.invalidate(block_model.pk)
         assert ReusableBlockCache.get(block_model.pk) is None
+
+    def test_clear_all(self):
+        """clear_all() clears all cache entries."""
+        # Set multiple cache entries
+        ReusableBlockCache.set(1, "<p>Content 1</p>")
+        ReusableBlockCache.set(2, "<p>Content 2</p>")
+        assert ReusableBlockCache.get(1) is not None
+        assert ReusableBlockCache.get(2) is not None
+
+        # Clear all
+        ReusableBlockCache.clear_all()
+
+        # Verify all entries are cleared
+        assert ReusableBlockCache.get(1) is None
+        assert ReusableBlockCache.get(2) is None
+
+    def test_layout_block_cache_hit(self):
+        """ReusableLayoutBlock uses cached value on second render."""
+        from wagtail_reusable_blocks.blocks import ReusableLayoutBlock
+
+        layout_model = ReusableBlock.objects.create(
+            name="Layout for Cache Hit",
+            content=[{"type": "raw_html", "value": '<div data-slot="main">Default</div>'}],
+        )
+
+        layout_block = ReusableLayoutBlock()
+        value = layout_block.to_python(
+            {
+                "layout": layout_model.pk,
+                "slot_content": [],
+            }
+        )
+
+        # First render - populates cache
+        html1 = layout_block.render(value)
+        assert "data-slot" in html1
+
+        # Verify it's cached
+        cached = ReusableBlockCache.get(layout_model.pk, None)
+        assert cached is not None
+
+        # Second render - should use cache (cache hit path)
+        html2 = layout_block.render(value)
+        assert html1 == html2
+
+    def test_layout_block_cache_hit_with_slot_content(self):
+        """ReusableLayoutBlock cache hit works with slot content."""
+        from wagtail_reusable_blocks.blocks import ReusableLayoutBlock
+
+        layout_model = ReusableBlock.objects.create(
+            name="Layout with Slots",
+            content=[{"type": "raw_html", "value": '<div data-slot="main">Default</div>'}],
+        )
+
+        layout_block = ReusableLayoutBlock()
+        value = layout_block.to_python(
+            {
+                "layout": layout_model.pk,
+                "slot_content": [
+                    {
+                        "type": "slot_fill",
+                        "value": {
+                            "slot_id": "main",
+                            "content": [{"type": "rich_text", "value": "<p>Filled</p>"}],
+                        },
+                    }
+                ],
+            }
+        )
+
+        # First render - populates cache
+        html1 = layout_block.render(value)
+        assert "Filled" in html1
+
+        # Second render - should use cache (cache hit path with slot content)
+        html2 = layout_block.render(value)
+        assert html1 == html2
