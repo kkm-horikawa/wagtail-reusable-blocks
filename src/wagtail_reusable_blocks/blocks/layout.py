@@ -79,6 +79,10 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
         slot_fills into the corresponding slot elements. Unfilled slots retain
         their default content.
 
+        Caching:
+            Results are cached using ReusableBlockCache when enabled.
+            Cache key includes a hash of slot content for unique combinations.
+
         Args:
             value: Block value dict with 'layout' and 'slot_content'
             context: Template context (propagated to nested blocks)
@@ -86,16 +90,37 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
         Returns:
             Rendered HTML string with slots injected
         """
+        from ..cache import ReusableBlockCache
         from ..utils.rendering import render_layout_with_slots
 
         layout = value["layout"]
         slot_content = value.get("slot_content", [])
 
+        # Prepare slot content data for cache key generation
+        slot_data = None
+        if slot_content:
+            slot_data = []
+            for slot_fill_block in slot_content:
+                slot_fill_value = slot_fill_block.value
+                # Create a serializable representation for cache key
+                slot_data.append(
+                    {
+                        "slot_id": slot_fill_value["slot_id"],
+                        "content_repr": str(slot_fill_value["content"]),
+                    }
+                )
+
+        # Check cache first
+        cached = ReusableBlockCache.get(layout.pk, slot_data)
+        if cached is not None:
+            return mark_safe(cached)
+
         # Render the layout to HTML
         layout_html = layout.content.render_as_block(context)
 
-        # If no slots to fill, return layout as-is
+        # If no slots to fill, cache and return layout as-is
         if not slot_content:
+            ReusableBlockCache.set(layout.pk, layout_html, slot_data)
             return mark_safe(layout_html)
 
         # Convert slot_content StreamField to list of dicts
@@ -111,7 +136,12 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
             )
 
         # Render with slots
-        return render_layout_with_slots(layout_html, slot_fills, context)
+        rendered = render_layout_with_slots(layout_html, slot_fills, context)
+
+        # Cache the result
+        ReusableBlockCache.set(layout.pk, rendered, slot_data)
+
+        return rendered
 
     def get_form_context(self, value, prefix, errors=None):  # type: ignore[no-untyped-def]
         """Add available slots to form context.
