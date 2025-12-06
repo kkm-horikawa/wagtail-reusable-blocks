@@ -39,6 +39,7 @@ htmlcov/
 *.sqlite3
 .env
 .env.local
+media/
 
 # OS
 .DS_Store
