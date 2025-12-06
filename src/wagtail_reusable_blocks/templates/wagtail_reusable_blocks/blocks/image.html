@@ -1,0 +1,2 @@
+{% load wagtailimages_tags %}
+{% picture value.image original format-{avif,webp,jpeg} preserve-svg alt=value.image.title loading="lazy" decoding="async" %}
