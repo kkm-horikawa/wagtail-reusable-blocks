@@ -53,18 +53,36 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
         slot_content: List of SlotFillBlocks to inject into slots
     """
 
+    # Note: We define slot_content in __init__ to ensure SlotFillBlock
+    # is instantiated after this class is fully defined, allowing
+    # nested ReusableLayoutBlock support.
+
     layout = SnippetChooserBlock(
         target_model="wagtail_reusable_blocks.ReusableBlock",
         help_text="Select a layout template with slot placeholders",
     )
 
-    slot_content = StreamBlock(
-        [
-            ("slot_fill", SlotFillBlock()),
-        ],
-        required=False,
-        help_text="Fill the slots in this layout template",
-    )
+    def __init__(self, local_blocks=None, **kwargs):  # type: ignore[no-untyped-def]
+        if local_blocks is None:
+            local_blocks = []
+
+        # Add slot_content block if not already provided
+        local_block_names = [name for name, _ in local_blocks]
+        if "slot_content" not in local_block_names:
+            local_blocks = list(local_blocks) + [
+                (
+                    "slot_content",
+                    StreamBlock(
+                        [
+                            ("slot_fill", SlotFillBlock()),
+                        ],
+                        required=False,
+                        help_text="Fill the slots in this layout template",
+                    ),
+                )
+            ]
+
+        super().__init__(local_blocks, **kwargs)
 
     class Meta:
         icon = "doc-empty"
