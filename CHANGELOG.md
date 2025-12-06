@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - TBD
+
+### Added
+
+#### Caching System
+- **Render caching** - Optional caching for rendered block HTML
+- **Automatic invalidation** - Cache cleared on block save/delete
+- **Admin cache clear** - "Clear Cache" button in snippet listing
+- Configuration: `CACHE_ENABLED`, `CACHE_TIMEOUT`, `CACHE_KEY_PREFIX`
+
+#### Wagtail Mixins Integration
+- **RevisionMixin** - Full revision history with restore capability
+- **DraftStateMixin** - Draft/publish workflow support
+- **LockableMixin** - Prevent concurrent editing conflicts
+- **WorkflowMixin** - Integration with Wagtail approval workflows
+- **PreviewableMixin** - Live preview in admin
+
+#### Scheduling
+- **Go-live scheduling** - Schedule blocks to publish at specific times
+- **Expiry scheduling** - Schedule blocks to unpublish automatically
+
+#### Performance
+- **Benchmark test suite** - Comprehensive performance tests with pytest-benchmark
+- **N+1 query prevention** - Optimized queries for admin and rendering
+- Performance targets: < 5ms single block, < 50ms for 10 blocks
+
+### Documentation
+
+- [Caching Guide](docs/CACHING.md) - Cache configuration and best practices
+- [Revisions & Workflows](docs/REVISIONS.md) - Using revision history and workflows
+- [Performance Guide](docs/PERFORMANCE.md) - Benchmarks and optimization
+
+### Breaking Changes
+
+**Database migration required!** Run after upgrading:
+```bash
+python manage.py migrate wagtail_reusable_blocks
+```
+
+The migration adds fields for:
+- Revision tracking (`latest_revision`)
+- Draft state (`live`, `has_unpublished_changes`, `first_published_at`, `last_published_at`)
+- Scheduling (`go_live_at`, `expire_at`, `expired`)
+- Locking (`locked`, `locked_by`, `locked_at`)
+
+Existing blocks will be migrated with `live=True` and no revision history.
+
 ## [0.2.0] - TBD
 
 ### Added
@@ -113,6 +160,7 @@ That's it! See the [README](README.md) for the complete tutorial.
 - Glossary of terms (GLOSSARY.md)
 - Contributing guidelines (CONTRIBUTING.md)
 
-[Unreleased]: https://github.com/kkm-horikawa/wagtail-reusable-blocks/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/kkm-horikawa/wagtail-reusable-blocks/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/kkm-horikawa/wagtail-reusable-blocks/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/kkm-horikawa/wagtail-reusable-blocks/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kkm-horikawa/wagtail-reusable-blocks/releases/tag/v0.1.0
