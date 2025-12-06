@@ -44,7 +44,9 @@ class SlotContentStreamBlock(StreamBlockType):  # type: ignore[misc]
                 SlotContentStreamBlock._creating_instance = True
                 from .layout import ReusableLayoutBlock
 
-                block_types.append(("reusable_layout", ReusableLayoutBlock()))
+                block_types.append(
+                    ("reusable_layout", ReusableLayoutBlock())  # type: ignore[no-untyped-call]
+                )
             except ImportError:
                 # ReusableLayoutBlock not yet defined, skip it
                 pass

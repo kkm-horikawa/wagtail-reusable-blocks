@@ -74,7 +74,7 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
                     "slot_content",
                     StreamBlock(
                         [
-                            ("slot_fill", SlotFillBlock()),
+                            ("slot_fill", SlotFillBlock()),  # type: ignore[no-untyped-call]
                         ],
                         required=False,
                         help_text="Fill the slots in this layout template",

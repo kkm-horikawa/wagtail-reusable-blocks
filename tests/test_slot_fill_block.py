@@ -178,8 +178,6 @@ class TestSlotFillBlockCustomization:
 
     def test_slot_fill_with_custom_local_blocks(self):
         """SlotFillBlock can be initialized with custom local_blocks."""
-        from wagtail.blocks import CharBlock
-
         from wagtail_reusable_blocks.blocks.slot_fill import SlotContentStreamBlock
 
         # Create custom content block
