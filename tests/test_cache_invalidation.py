@@ -1,12 +1,18 @@
 """Tests for cache invalidation signals and views (Issue #68)."""
 
+from unittest.mock import Mock
+
 from django.contrib.auth.models import User
 from django.core.cache import caches
-from django.test import Client, TestCase, override_settings
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from wagtail_reusable_blocks.cache import ReusableBlockCache
 from wagtail_reusable_blocks.models import ReusableBlock
+from wagtail_reusable_blocks.views.cache import (
+    clear_all_cache_view,
+    clear_block_cache_view,
+)
 from wagtail_reusable_blocks.wagtail_hooks import (
     global_admin_js,
     register_clear_cache_button,
@@ -201,6 +207,15 @@ class TestClearCacheViews(TestCase):
         assert response.status_code == 404
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "perm-test-cache",
+        }
+    },
+    WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+)
 class TestClearCacheViewsPermission(TestCase):
     """Tests for cache clear view permissions."""
 
@@ -214,15 +229,6 @@ class TestClearCacheViewsPermission(TestCase):
         self.client = Client()
         self.client.force_login(self.user)
 
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-                "LOCATION": "perm-test-cache",
-            }
-        },
-        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
-    )
     def test_clear_block_cache_view_requires_permission(self):
         """Clear cache view requires change_reusableblock permission."""
         block = ReusableBlock.objects.create(
@@ -240,15 +246,6 @@ class TestClearCacheViewsPermission(TestCase):
             # Redirects to login page
             assert "login" in response.url
 
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-                "LOCATION": "perm-test-cache-2",
-            }
-        },
-        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
-    )
     def test_clear_all_cache_view_requires_permission(self):
         """Clear all cache view requires change_reusableblock permission."""
         response = self.client.post(reverse("wagtail_reusable_blocks:clear_all_cache"))
@@ -258,6 +255,66 @@ class TestClearCacheViewsPermission(TestCase):
         if response.status_code == 302:
             # Redirects to login page
             assert "login" in response.url
+
+
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "direct-perm-test-cache",
+        }
+    },
+    WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+)
+class TestClearCacheViewsPermissionDirect(TestCase):
+    """Tests for permission denied path in cache clear views using direct calls."""
+
+    def setUp(self):
+        """Set up request factory and session."""
+        from django.contrib.sessions.backends.db import SessionStore
+
+        self.factory = RequestFactory()
+        self.session = SessionStore()
+        self.session.create()
+
+    def _setup_request(self, request):
+        """Add session and messages to request."""
+        from django.contrib.messages.storage.fallback import FallbackStorage
+
+        request.session = self.session
+        request._messages = FallbackStorage(request)
+        return request
+
+    def test_clear_block_cache_view_permission_denied(self):
+        """Clear cache view returns permission denied for user without permission."""
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Test</p>"}],
+        )
+
+        # Create request with user that doesn't have permission
+        request = self.factory.post(f"/blocks/{block.pk}/clear-cache/")
+        request.user = Mock()
+        request.user.has_perm = Mock(return_value=False)
+        self._setup_request(request)
+
+        response = clear_block_cache_view(request, block.pk)
+
+        # Should return permission denied response
+        assert response.status_code in (302, 403)
+
+    def test_clear_all_cache_view_permission_denied(self):
+        """Clear all cache view returns permission denied for user without permission."""
+        # Create request with user that doesn't have permission
+        request = self.factory.post("/clear-all-cache/")
+        request.user = Mock()
+        request.user.has_perm = Mock(return_value=False)
+        self._setup_request(request)
+
+        response = clear_all_cache_view(request)
+
+        # Should return permission denied response
+        assert response.status_code in (302, 403)
 
 
 class TestClearCacheButtonHook:
