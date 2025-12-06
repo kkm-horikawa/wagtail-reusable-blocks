@@ -22,6 +22,9 @@ else:
 class SlotContentStreamBlock(StreamBlockType):  # type: ignore[misc]
     """StreamBlock for slot content with lazy block type loading."""
 
+    # Class-level flag to prevent infinite recursion when creating nested layouts
+    _creating_instance = False
+
     def __init__(self, **kwargs):  # type: ignore[no-untyped-def]
         # Import here to avoid circular dependency
         from .chooser import ReusableBlockChooserBlock
@@ -35,13 +38,20 @@ class SlotContentStreamBlock(StreamBlockType):  # type: ignore[misc]
 
         # Try to import ReusableLayoutBlock if available
         # This will work after ReusableLayoutBlock is defined
-        try:
-            from .layout import ReusableLayoutBlock
+        # Use _creating_instance flag to prevent infinite recursion
+        if not SlotContentStreamBlock._creating_instance:
+            try:
+                SlotContentStreamBlock._creating_instance = True
+                from .layout import ReusableLayoutBlock
 
-            block_types.append(("reusable_layout", ReusableLayoutBlock()))
-        except ImportError:
-            # ReusableLayoutBlock not yet defined, skip it
-            pass
+                block_types.append(
+                    ("reusable_layout", ReusableLayoutBlock())  # type: ignore[no-untyped-call]
+                )
+            except ImportError:
+                # ReusableLayoutBlock not yet defined, skip it
+                pass
+            finally:
+                SlotContentStreamBlock._creating_instance = False
 
         super().__init__(block_types, **kwargs)
 
@@ -75,16 +85,37 @@ class SlotFillBlock(StructBlockType):  # type: ignore[misc]
         content: StreamField containing the content to inject into the slot
     """
 
+    # Note: We don't define `content` as a class attribute because
+    # SlotContentStreamBlock needs to be instantiated after ReusableLayoutBlock
+    # is defined to include it in the available block types.
+    # Instead, we define it in __init__.
+
     slot_id = CharBlock(
         max_length=50,
         help_text="The slot identifier to fill (e.g., 'main', 'sidebar')",
         label="Slot ID",
     )
 
-    content = SlotContentStreamBlock(  # type: ignore[no-untyped-call]
-        help_text="Content to inject into this slot",
-        label="Slot Content",
-    )
+    def __init__(self, local_blocks=None, **kwargs):  # type: ignore[no-untyped-def]
+        # Create SlotContentStreamBlock at runtime to ensure ReusableLayoutBlock
+        # is available for nested layouts
+        if local_blocks is None:
+            local_blocks = []
+
+        # Add content block if not already provided
+        local_block_names = [name for name, _ in local_blocks]
+        if "content" not in local_block_names:
+            local_blocks = list(local_blocks) + [
+                (
+                    "content",
+                    SlotContentStreamBlock(  # type: ignore[no-untyped-call]
+                        help_text="Content to inject into this slot",
+                        label="Slot Content",
+                    ),
+                )
+            ]
+
+        super().__init__(local_blocks, **kwargs)
 
     class Meta:
         icon = "placeholder"
