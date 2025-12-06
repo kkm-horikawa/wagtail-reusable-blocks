@@ -1,6 +1,7 @@
 # wagtail-reusable-blocks
 
 [![PyPI version](https://badge.fury.io/py/wagtail-reusable-blocks.svg)](https://badge.fury.io/py/wagtail-reusable-blocks)
+[![Published on Django Packages](https://img.shields.io/badge/Published%20on-Django%20Packages-0c3c26)](https://djangopackages.org/packages/p/wagtail-reusable-blocks/)
 [![CI](https://github.com/kkm-horikawa/wagtail-reusable-blocks/actions/workflows/ci.yml/badge.svg)](https://github.com/kkm-horikawa/wagtail-reusable-blocks/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/kkm-horikawa/wagtail-reusable-blocks/branch/develop/graph/badge.svg)](https://codecov.io/gh/kkm-horikawa/wagtail-reusable-blocks)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -25,6 +26,10 @@ Create content blocks once and reuse them across your Wagtail site. When you upd
 - ✅ **Customizable** - Extend with your own block types
 - ✅ **Slot-based templating** (v0.2.0+) - Reusable layouts with fillable slots
 - ✅ **Dynamic slot selection** (v0.2.0+) - Auto-populated dropdown for slot IDs
+- ✅ **Revision history** (v0.3.0+) - Track changes and restore previous versions
+- ✅ **Draft/Publish workflow** (v0.3.0+) - Save drafts before publishing
+- ✅ **Locking** (v0.3.0+) - Prevent concurrent editing conflicts
+- ✅ **Approval workflows** (v0.3.0+) - Integration with Wagtail workflows
 
 ## Use Cases
 
@@ -301,6 +306,11 @@ WAGTAIL_REUSABLE_BLOCKS = {
     'SLOT_ATTRIBUTE': 'data-slot',
     'SLOT_LABEL_ATTRIBUTE': 'data-slot-label',
     'RENDER_TIMEOUT': 5,
+
+    # v0.3.0 settings
+    'CACHE_ENABLED': True,
+    'CACHE_TIMEOUT': 3600,  # 1 hour
+    'CACHE_KEY_PREFIX': 'reusable_block',
 }
 ```
 
@@ -314,6 +324,9 @@ WAGTAIL_REUSABLE_BLOCKS = {
 | `SLOT_ATTRIBUTE` | `'data-slot'` | HTML attribute for slot detection | v0.2.0+ |
 | `SLOT_LABEL_ATTRIBUTE` | `'data-slot-label'` | Optional label attribute for slots | v0.2.0+ |
 | `RENDER_TIMEOUT` | `5` | Maximum render time in seconds | v0.2.0+ |
+| `CACHE_ENABLED` | `False` | Enable caching for rendered blocks | v0.3.0+ |
+| `CACHE_TIMEOUT` | `3600` | Cache TTL in seconds (1 hour default) | v0.3.0+ |
+| `CACHE_KEY_PREFIX` | `'reusable_block'` | Prefix for cache keys | v0.3.0+ |
 
 ## Advanced Usage
 
@@ -466,9 +479,9 @@ Layout A → slot → Layout B → slot → Layout C ✅
 
 | Python | Django | Wagtail |
 |--------|--------|---------|
-| 3.10+ | 4.2, 5.1, 5.2 | 5.2, 6.4, 7.0, 7.2 |
+| 3.10+ | 4.2, 5.1, 5.2 | 6.4, 7.0, 7.2 |
 
-See our [CI configuration](.github/workflows/ci.yml) for the complete compatibility matrix (39 tested combinations).
+See our [CI configuration](.github/workflows/ci.yml) for the complete compatibility matrix.
 
 ## Features by Version
 
@@ -480,7 +493,7 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 - ✅ Auto-generated slugs
 - ✅ Searchable snippet chooser
 
-### v0.2.0 - Slot System (Current)
+### v0.2.0 - Slot System
 - ✅ ReusableLayoutBlock for layout templates with fillable slots
 - ✅ SlotFillBlock for injecting custom content into layout slots
 - ✅ Slot detection API endpoint (`/admin/reusable-blocks/blocks/{id}/slots/`)
@@ -491,15 +504,23 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 - ✅ Extended circular reference detection for slot-based nesting
 - ✅ Improved error messages with reference chains
 
-### v0.3.0 - Performance & Polish (Planned)
-- Caching for optimized rendering
-- Usage tracking ("where is this block used?")
-- Revision support
+### v0.3.0 - Performance & Enterprise Features (Current)
+- ✅ Caching for optimized rendering with automatic invalidation
+- ✅ Revision support (undo/history)
+- ✅ Draft/Publish workflow (save drafts before publishing)
+- ✅ Locking (prevent concurrent editing)
+- ✅ Workflow integration (approval workflows)
+- ✅ Live preview in admin
+- ✅ Scheduled publishing (go live at / expire at)
+- ✅ Performance benchmarks and N+1 query prevention
 
 ## Documentation
 
 - [Architecture & Design Decisions](docs/ARCHITECTURE.md)
 - [Glossary of Terms](docs/GLOSSARY.md)
+- [Caching Guide](docs/CACHING.md) (v0.3.0+)
+- [Revisions & Workflows](docs/REVISIONS.md) (v0.3.0+)
+- [Performance Guide](docs/PERFORMANCE.md) (v0.3.0+)
 - [Contributing Guide](CONTRIBUTING.md)
 
 ## Project Links

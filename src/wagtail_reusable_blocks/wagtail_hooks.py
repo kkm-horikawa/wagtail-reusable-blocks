@@ -2,13 +2,15 @@
 
 from typing import TYPE_CHECKING
 
-from django.urls import include, path
+from django.urls import include, path, reverse
+from django.utils.safestring import mark_safe
 from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
-from wagtail.admin.ui.tables import UpdatedAtColumn
+from wagtail.admin.ui.tables import LiveStatusTagColumn, UpdatedAtColumn
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
+from .cache import ReusableBlockCache
 from .conf import get_setting
 from .models import ReusableBlock
 
@@ -40,8 +42,12 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
     Features:
         - Search by name and slug
         - Filter by creation and update dates
-        - Display name, slug, and last updated timestamp
+        - Display name, slug, live status, and last updated timestamp
         - Default ordering by most recently updated
+        - Draft/publish workflow support
+        - Locking support
+        - Revision history
+        - Preview functionality
     """
 
     model = ReusableBlock
@@ -53,10 +59,11 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
     # Search configuration
     search_fields = ["name", "slug"]
 
-    # List display configuration
+    # List display configuration (includes live status for DraftStateMixin)
     list_display = [
         "name",
         "slug",
+        LiveStatusTagColumn(),
         UpdatedAtColumn(),
     ]
     list_per_page = 50
@@ -72,6 +79,9 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
 
     # Enable inspect view for read-only preview
     inspect_view_enabled = True
+
+    # Enable preview (for PreviewableMixin)
+    preview_enabled = True
 
 
 # Register the custom viewset only if default registration is enabled
@@ -97,3 +107,74 @@ def register_admin_urls() -> list[object]:
             ),
         ),
     ]
+
+
+@hooks.register("register_snippet_listing_buttons")  # type: ignore[untyped-decorator]
+def register_clear_cache_button(
+    snippet: object,
+    user: object,
+    next_url: str | None = None,
+) -> list[object]:
+    """Add a 'Clear Cache' button to the snippet listing actions.
+
+    Only shows for ReusableBlock snippets when caching is enabled.
+    """
+    from wagtail.snippets.widgets import SnippetListingButton
+
+    if not isinstance(snippet, ReusableBlock):
+        return []
+
+    if not ReusableBlockCache.is_enabled():
+        return []
+
+    return [
+        SnippetListingButton(
+            "Clear Cache",
+            reverse(
+                "wagtail_reusable_blocks:clear_block_cache",
+                args=[snippet.pk],
+            ),
+            priority=100,
+            attrs={"data-controller": "w-action", "data-w-action-method-value": "POST"},
+        ),
+    ]
+
+
+@hooks.register("insert_global_admin_js")  # type: ignore[untyped-decorator]
+def global_admin_js() -> str:
+    """Add JavaScript for cache clear functionality.
+
+    This adds a form submission handler for the clear cache button.
+    """
+    if not ReusableBlockCache.is_enabled():
+        return ""
+
+    return mark_safe(
+        """
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle clear cache button clicks
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('[data-clear-cache-url]');
+                if (btn) {
+                    e.preventDefault();
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = btn.dataset.clearCacheUrl;
+
+                    // Add CSRF token
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                     document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                    form.appendChild(csrfInput);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+        </script>
+        """
+    )

@@ -104,3 +104,15 @@ WAGTAIL_SITE_NAME = "Test Site"
 # Use JSON field for StreamField
 # This is required for Wagtail 3.0+
 USE_JSON_FIELD = True
+
+# Cache settings for testing - use dummy cache to avoid test pollution
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    }
+}
+
+# Disable caching in tests by default
+WAGTAIL_REUSABLE_BLOCKS = {
+    "CACHE_ENABLED": False,
+}

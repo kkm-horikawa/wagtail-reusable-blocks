@@ -296,5 +296,37 @@ class TestSlotFillNesting:
         assert "image" in content_block.child_blocks
         assert "reusable_block" in content_block.child_blocks
 
-        # reusable_layout may not be loaded due to circular import
-        # This is acceptable - it will be loaded at runtime
+        # reusable_layout should be available for nested layouts (Issue #62)
+        assert "reusable_layout" in content_block.child_blocks
+
+
+class TestReusableLayoutBlockCustomization:
+    """Tests for ReusableLayoutBlock customization options."""
+
+    def test_layout_block_with_custom_local_blocks(self):
+        """ReusableLayoutBlock can be initialized with custom local_blocks."""
+        from wagtail.blocks import StreamBlock
+
+        from wagtail_reusable_blocks.blocks import SlotFillBlock
+
+        # Create custom slot_content block
+        custom_slot_content = StreamBlock([("slot_fill", SlotFillBlock())])
+
+        # Pass local_blocks with custom slot_content
+        block = ReusableLayoutBlock(
+            local_blocks=[
+                ("slot_content", custom_slot_content),
+            ]
+        )
+
+        # Should use the provided slot_content block
+        assert "slot_content" in block.child_blocks
+        assert "layout" in block.child_blocks
+
+    def test_layout_block_with_empty_local_blocks(self):
+        """ReusableLayoutBlock handles empty local_blocks list."""
+        block = ReusableLayoutBlock(local_blocks=[])
+
+        # Should still have layout and slot_content
+        assert "layout" in block.child_blocks
+        assert "slot_content" in block.child_blocks

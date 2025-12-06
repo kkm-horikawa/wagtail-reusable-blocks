@@ -19,10 +19,17 @@ class WagtailReusableBlocksConfig(AppConfig):
         """
         Perform initialization when Django starts.
 
-        Validates settings configuration.
+        Validates settings configuration and registers signal handlers.
         Note: ReusableBlock snippet registration is now handled in wagtail_hooks.py
         """
         self._validate_settings()
+        self._register_signals()
+
+    def _register_signals(self) -> None:
+        """Register signal handlers for cache invalidation."""
+        # Import signals module to register handlers
+        # This must be done in ready() to ensure models are loaded
+        from . import signals  # noqa: F401
 
     def _validate_settings(self) -> None:
         """Validate settings configuration."""
