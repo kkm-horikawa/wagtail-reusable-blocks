@@ -2,21 +2,37 @@
 
 from typing import TYPE_CHECKING, Any
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import slugify
-from wagtail.admin.panels import FieldPanel
+from wagtail.admin.panels import FieldPanel, PublishingPanel
 from wagtail.blocks import RawHTMLBlock, RichTextBlock
 from wagtail.fields import StreamField
+from wagtail.models import (
+    DraftStateMixin,
+    LockableMixin,
+    PreviewableMixin,
+    RevisionMixin,
+    WorkflowMixin,
+)
 from wagtail.search import index
 
 if TYPE_CHECKING:
     from django.template.context import Context
 
 
-class ReusableBlock(index.Indexed, models.Model):  # type: ignore[misc]
+class ReusableBlock(
+    WorkflowMixin,
+    DraftStateMixin,
+    LockableMixin,
+    RevisionMixin,
+    PreviewableMixin,
+    index.Indexed,
+    models.Model,
+):  # type: ignore[misc]
     """Reusable content blocks that can be used across multiple pages.
 
     By default, this model is automatically registered as a Wagtail Snippet
@@ -102,11 +118,27 @@ class ReusableBlock(index.Indexed, models.Model):  # type: ignore[misc]
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # GenericRelation for revisions (required for RevisionMixin)
+    _revisions = GenericRelation(
+        "wagtailcore.Revision",
+        related_query_name="reusableblock",
+    )
+
+    # GenericRelation for workflow states (required for WorkflowMixin)
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="reusableblock",
+        for_concrete_model=False,
+    )
+
     # Admin panels
     panels = [
         FieldPanel("name"),
         FieldPanel("slug"),
         FieldPanel("content"),
+        PublishingPanel(),
     ]
 
     # Search configuration
@@ -345,3 +377,42 @@ class ReusableBlock(index.Indexed, models.Model):  # type: ignore[misc]
                     f"template via WAGTAIL_REUSABLE_BLOCKS['TEMPLATE']."
                 )
             raise TemplateDoesNotExist(msg) from e
+
+    @property
+    def revisions(self) -> GenericRelation:
+        """Return the revisions relation for RevisionMixin compatibility."""
+        return self._revisions
+
+    def get_preview_template(
+        self, request: Any = None, mode_name: str = ""
+    ) -> str:
+        """Return the template to use for previewing this block.
+
+        Required by PreviewableMixin.
+
+        Args:
+            request: The HTTP request object.
+            mode_name: The preview mode name.
+
+        Returns:
+            Template path for rendering preview.
+        """
+        from ..conf import get_setting
+
+        return get_setting("TEMPLATE")
+
+    def get_preview_context(
+        self, request: Any = None, mode_name: str = ""
+    ) -> dict[str, Any]:
+        """Return context for previewing this block.
+
+        Required by PreviewableMixin.
+
+        Args:
+            request: The HTTP request object.
+            mode_name: The preview mode name.
+
+        Returns:
+            Context dictionary for template rendering.
+        """
+        return {"block": self}

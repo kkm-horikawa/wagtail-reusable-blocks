@@ -26,6 +26,10 @@ Create content blocks once and reuse them across your Wagtail site. When you upd
 - ✅ **Customizable** - Extend with your own block types
 - ✅ **Slot-based templating** (v0.2.0+) - Reusable layouts with fillable slots
 - ✅ **Dynamic slot selection** (v0.2.0+) - Auto-populated dropdown for slot IDs
+- ✅ **Revision history** (v0.3.0+) - Track changes and restore previous versions
+- ✅ **Draft/Publish workflow** (v0.3.0+) - Save drafts before publishing
+- ✅ **Locking** (v0.3.0+) - Prevent concurrent editing conflicts
+- ✅ **Approval workflows** (v0.3.0+) - Integration with Wagtail workflows
 
 ## Use Cases
 
@@ -492,10 +496,14 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 - ✅ Extended circular reference detection for slot-based nesting
 - ✅ Improved error messages with reference chains
 
-### v0.3.0 - Performance & Polish (Planned)
-- Caching for optimized rendering
-- Usage tracking ("where is this block used?")
-- Revision support
+### v0.3.0 - Enterprise Features (In Development)
+- ✅ Caching for optimized rendering
+- ✅ Revision support (undo/history)
+- ✅ Draft/Publish workflow (save drafts before publishing)
+- ✅ Locking (prevent concurrent editing)
+- ✅ Workflow integration (approval workflows)
+- ✅ Live preview in admin
+- ✅ Scheduled publishing (go live at / expire at)
 
 ## Documentation
 

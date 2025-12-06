@@ -38,8 +38,8 @@ class TestReusableBlockViewSet:
         """ViewSet has correct list display columns."""
         assert "name" in viewset.list_display
         assert "slug" in viewset.list_display
-        # UpdatedAtColumn is also in the list
-        assert len(viewset.list_display) == 3
+        # LiveStatusTagColumn and UpdatedAtColumn are also in the list
+        assert len(viewset.list_display) == 4
 
     def test_list_per_page(self, viewset):
         """ViewSet has correct pagination."""
@@ -60,6 +60,10 @@ class TestReusableBlockViewSet:
     def test_inspect_view_enabled(self, viewset):
         """Inspect view is enabled."""
         assert viewset.inspect_view_enabled is True
+
+    def test_preview_enabled(self, viewset):
+        """Preview functionality is enabled."""
+        assert viewset.preview_enabled is True
 
 
 class TestReusableBlockFilterSet:
