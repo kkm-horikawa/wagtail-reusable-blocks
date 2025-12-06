@@ -25,14 +25,14 @@ if TYPE_CHECKING:
 
 
 class ReusableBlock(
-    WorkflowMixin,
-    DraftStateMixin,
-    LockableMixin,
-    RevisionMixin,
-    PreviewableMixin,
-    index.Indexed,
+    WorkflowMixin,  # type: ignore[misc]
+    DraftStateMixin,  # type: ignore[misc]
+    LockableMixin,  # type: ignore[misc]
+    RevisionMixin,  # type: ignore[misc]
+    PreviewableMixin,  # type: ignore[misc]
+    index.Indexed,  # type: ignore[misc]
     models.Model,
-):  # type: ignore[misc]
+):
     """Reusable content blocks that can be used across multiple pages.
 
     By default, this model is automatically registered as a Wagtail Snippet
@@ -381,11 +381,9 @@ class ReusableBlock(
     @property
     def revisions(self) -> GenericRelation:
         """Return the revisions relation for RevisionMixin compatibility."""
-        return self._revisions
+        return self._revisions  # type: ignore[no-any-return]
 
-    def get_preview_template(
-        self, request: Any = None, mode_name: str = ""
-    ) -> str:
+    def get_preview_template(self, request: Any = None, mode_name: str = "") -> str:
         """Return the template to use for previewing this block.
 
         Required by PreviewableMixin.
@@ -399,7 +397,7 @@ class ReusableBlock(
         """
         from ..conf import get_setting
 
-        return get_setting("TEMPLATE")
+        return str(get_setting("TEMPLATE"))
 
     def get_preview_context(
         self, request: Any = None, mode_name: str = ""
