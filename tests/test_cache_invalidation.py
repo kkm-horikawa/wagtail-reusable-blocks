@@ -1,0 +1,256 @@
+"""Tests for cache invalidation signals and views (Issue #68)."""
+
+from django.contrib.auth.models import User
+from django.core.cache import caches
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse
+
+from wagtail_reusable_blocks.cache import ReusableBlockCache
+from wagtail_reusable_blocks.models import ReusableBlock
+
+
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "signal-test-cache",
+        }
+    },
+    WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+)
+class TestCacheInvalidationSignals(TestCase):
+    """Tests for cache invalidation on model save/delete."""
+
+    def setUp(self):
+        """Clear cache before each test."""
+        caches["default"].clear()
+
+    def test_cache_invalidated_on_save(self):
+        """Cache is invalidated when a ReusableBlock is saved."""
+        # Create a block and cache some content
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Original</p>"}],
+        )
+
+        # Manually cache content
+        ReusableBlockCache.set(block.pk, "<p>Cached content</p>")
+        assert ReusableBlockCache.get(block.pk) == "<p>Cached content</p>"
+
+        # Save the block (triggers post_save signal)
+        block.name = "Updated Block"
+        block.save()
+
+        # Cache should be invalidated
+        assert ReusableBlockCache.get(block.pk) is None
+
+    def test_cache_invalidated_on_delete(self):
+        """Cache is cleaned up when a ReusableBlock is deleted."""
+        # Create a block and cache some content
+        block = ReusableBlock.objects.create(
+            name="To Delete",
+            content=[{"type": "rich_text", "value": "<p>To delete</p>"}],
+        )
+        block_pk = block.pk
+
+        # Manually cache content
+        ReusableBlockCache.set(block_pk, "<p>Cached content</p>")
+        assert ReusableBlockCache.get(block_pk) == "<p>Cached content</p>"
+
+        # Delete the block (triggers post_delete signal)
+        block.delete()
+
+        # Cache should be cleaned up
+        assert ReusableBlockCache.get(block_pk) is None
+
+    def test_cache_invalidated_on_create(self):
+        """Cache invalidation doesn't error on new block creation."""
+        # Creating a block also triggers post_save, should not error
+        block = ReusableBlock.objects.create(
+            name="New Block",
+            content=[{"type": "rich_text", "value": "<p>New</p>"}],
+        )
+
+        # No cached content should exist for new block
+        assert ReusableBlockCache.get(block.pk) is None
+
+
+class TestCacheInvalidationSignalsDisabled(TestCase):
+    """Tests for cache invalidation behavior when caching is disabled."""
+
+    def test_signal_does_nothing_when_cache_disabled(self):
+        """Signals do nothing when caching is disabled."""
+        # tests/settings.py sets CACHE_ENABLED = False
+        # This should not error even though cache is disabled
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Test</p>"}],
+        )
+
+        # Updating should not error
+        block.name = "Updated"
+        block.save()
+
+        # Deleting should not error
+        block.delete()
+
+
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "view-test-cache",
+        }
+    },
+    WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+)
+class TestClearCacheViews(TestCase):
+    """Tests for cache clear views."""
+
+    def setUp(self):
+        """Set up test user and clear cache."""
+        caches["default"].clear()
+        self.user = User.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="password",
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_clear_block_cache_view(self):
+        """Clear cache view clears cache for specific block."""
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Test</p>"}],
+        )
+
+        # Cache some content
+        ReusableBlockCache.set(block.pk, "<p>Cached</p>")
+        assert ReusableBlockCache.get(block.pk) == "<p>Cached</p>"
+
+        # Call the clear cache view
+        response = self.client.post(
+            reverse("wagtail_reusable_blocks:clear_block_cache", args=[block.pk])
+        )
+
+        # Should redirect
+        assert response.status_code == 302
+
+        # Cache should be cleared
+        assert ReusableBlockCache.get(block.pk) is None
+
+    def test_clear_all_cache_view(self):
+        """Clear all cache view clears all block caches."""
+        block1 = ReusableBlock.objects.create(
+            name="Block 1",
+            content=[{"type": "rich_text", "value": "<p>1</p>"}],
+        )
+        block2 = ReusableBlock.objects.create(
+            name="Block 2",
+            content=[{"type": "rich_text", "value": "<p>2</p>"}],
+        )
+
+        # Cache some content
+        ReusableBlockCache.set(block1.pk, "<p>Cached 1</p>")
+        ReusableBlockCache.set(block2.pk, "<p>Cached 2</p>")
+        assert ReusableBlockCache.get(block1.pk) is not None
+        assert ReusableBlockCache.get(block2.pk) is not None
+
+        # Call the clear all cache view
+        response = self.client.post(reverse("wagtail_reusable_blocks:clear_all_cache"))
+
+        # Should redirect
+        assert response.status_code == 302
+
+        # All caches should be cleared
+        assert ReusableBlockCache.get(block1.pk) is None
+        assert ReusableBlockCache.get(block2.pk) is None
+
+    def test_clear_block_cache_view_requires_post(self):
+        """Clear cache view only accepts POST requests."""
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Test</p>"}],
+        )
+
+        response = self.client.get(
+            reverse("wagtail_reusable_blocks:clear_block_cache", args=[block.pk])
+        )
+
+        # Should return 405 Method Not Allowed
+        assert response.status_code == 405
+
+    def test_clear_all_cache_view_requires_post(self):
+        """Clear all cache view only accepts POST requests."""
+        response = self.client.get(reverse("wagtail_reusable_blocks:clear_all_cache"))
+
+        # Should return 405 Method Not Allowed
+        assert response.status_code == 405
+
+    def test_clear_block_cache_view_returns_404_for_nonexistent_block(self):
+        """Clear cache view returns 404 for non-existent block."""
+        response = self.client.post(
+            reverse("wagtail_reusable_blocks:clear_block_cache", args=[99999])
+        )
+
+        assert response.status_code == 404
+
+
+class TestClearCacheViewsPermission(TestCase):
+    """Tests for cache clear view permissions."""
+
+    def setUp(self):
+        """Set up test user without permissions."""
+        self.user = User.objects.create_user(
+            username="regular",
+            email="regular@example.com",
+            password="password",
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    @override_settings(
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "perm-test-cache",
+            }
+        },
+        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+    )
+    def test_clear_block_cache_view_requires_permission(self):
+        """Clear cache view requires change_reusableblock permission."""
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Test</p>"}],
+        )
+
+        response = self.client.post(
+            reverse("wagtail_reusable_blocks:clear_block_cache", args=[block.pk])
+        )
+
+        # Should be permission denied (403 or redirect to login)
+        assert response.status_code in (302, 403)
+        if response.status_code == 302:
+            # Redirects to login page
+            assert "login" in response.url
+
+    @override_settings(
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "perm-test-cache-2",
+            }
+        },
+        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+    )
+    def test_clear_all_cache_view_requires_permission(self):
+        """Clear all cache view requires change_reusableblock permission."""
+        response = self.client.post(reverse("wagtail_reusable_blocks:clear_all_cache"))
+
+        # Should be permission denied (403 or redirect to login)
+        assert response.status_code in (302, 403)
+        if response.status_code == 302:
+            # Redirects to login page
+            assert "login" in response.url
