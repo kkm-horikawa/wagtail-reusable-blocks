@@ -7,6 +7,10 @@ from django.urls import reverse
 
 from wagtail_reusable_blocks.cache import ReusableBlockCache
 from wagtail_reusable_blocks.models import ReusableBlock
+from wagtail_reusable_blocks.wagtail_hooks import (
+    global_admin_js,
+    register_clear_cache_button,
+)
 
 
 @override_settings(
@@ -254,3 +258,118 @@ class TestClearCacheViewsPermission(TestCase):
         if response.status_code == 302:
             # Redirects to login page
             assert "login" in response.url
+
+
+class TestClearCacheButtonHook:
+    """Tests for the clear cache button hook."""
+
+    def test_returns_empty_for_non_reusable_block(self):
+        """Hook returns empty list for non-ReusableBlock snippets."""
+
+        class OtherSnippet:
+            pk = 1
+
+        result = register_clear_cache_button(OtherSnippet(), None)
+        assert result == []
+
+    def test_returns_empty_when_cache_disabled(self):
+        """Hook returns empty list when caching is disabled."""
+        # tests/settings.py sets CACHE_ENABLED = False
+        block = ReusableBlock(pk=1, name="Test")
+        result = register_clear_cache_button(block, None)
+        assert result == []
+
+    @override_settings(
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "hook-test-cache",
+            }
+        },
+        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+    )
+    def test_returns_button_when_cache_enabled(self):
+        """Hook returns button when caching is enabled."""
+        block = ReusableBlock(pk=123, name="Test")
+        result = register_clear_cache_button(block, None)
+        assert len(result) == 1
+        assert result[0].label == "Clear Cache"
+        assert "123" in result[0].url
+
+
+class TestGlobalAdminJsHook:
+    """Tests for the global admin JS hook."""
+
+    def test_returns_empty_when_cache_disabled(self):
+        """Hook returns empty string when caching is disabled."""
+        # tests/settings.py sets CACHE_ENABLED = False
+        result = global_admin_js()
+        assert result == ""
+
+    @override_settings(
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "js-hook-test-cache",
+            }
+        },
+        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+    )
+    def test_returns_javascript_when_cache_enabled(self):
+        """Hook returns JavaScript when caching is enabled."""
+        result = global_admin_js()
+        assert "<script>" in result
+        assert "data-clear-cache-url" in result
+
+
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "message-test-cache",
+        }
+    },
+    WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
+)
+class TestClearCacheViewMessages(TestCase):
+    """Tests for success messages in cache clear views."""
+
+    def setUp(self):
+        """Set up test user and clear cache."""
+        caches["default"].clear()
+        self.user = User.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="password",
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_clear_block_cache_shows_success_message(self):
+        """Clear block cache view shows success message."""
+        block = ReusableBlock.objects.create(
+            name="Test Block",
+            content=[{"type": "rich_text", "value": "<p>Test</p>"}],
+        )
+
+        response = self.client.post(
+            reverse("wagtail_reusable_blocks:clear_block_cache", args=[block.pk]),
+            follow=True,
+        )
+
+        # Check for success message
+        messages_list = list(response.context.get("messages", []))
+        assert len(messages_list) >= 1
+        assert "Cache cleared" in str(messages_list[0])
+
+    def test_clear_all_cache_shows_success_message(self):
+        """Clear all cache view shows success message."""
+        response = self.client.post(
+            reverse("wagtail_reusable_blocks:clear_all_cache"),
+            follow=True,
+        )
+
+        # Check for success message
+        messages_list = list(response.context.get("messages", []))
+        assert len(messages_list) >= 1
+        assert "cache entries have been cleared" in str(messages_list[0])
