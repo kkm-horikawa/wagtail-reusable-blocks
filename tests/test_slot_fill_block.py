@@ -155,8 +155,52 @@ class TestSlotContentStreamBlock:
         assert "image" in block.child_blocks
         assert "reusable_block" in block.child_blocks
 
-        # reusable_layout may not be loaded due to circular import
-        # but that's acceptable
+        # reusable_layout should be available for nested layouts
+        assert "reusable_layout" in block.child_blocks
+
+    def test_slot_content_stream_block_includes_reusable_layout(self):
+        """SlotContentStreamBlock includes ReusableLayoutBlock for nested layouts."""
+        from wagtail_reusable_blocks.blocks.slot_fill import SlotContentStreamBlock
+
+        block = SlotContentStreamBlock()
+
+        # Should have reusable_layout for nested layouts (Issue #62)
+        assert "reusable_layout" in block.child_blocks
+
+        # Verify it's the correct type
+        from wagtail_reusable_blocks.blocks import ReusableLayoutBlock
+
+        assert isinstance(block.child_blocks["reusable_layout"], ReusableLayoutBlock)
+
+
+class TestSlotFillBlockCustomization:
+    """Tests for SlotFillBlock customization options."""
+
+    def test_slot_fill_with_custom_local_blocks(self):
+        """SlotFillBlock can be initialized with custom local_blocks."""
+        from wagtail_reusable_blocks.blocks.slot_fill import SlotContentStreamBlock
+
+        # Create custom content block
+        custom_content = SlotContentStreamBlock()
+
+        # Pass local_blocks with custom content
+        block = SlotFillBlock(
+            local_blocks=[
+                ("content", custom_content),
+            ]
+        )
+
+        # Should use the provided content block
+        assert "content" in block.child_blocks
+        assert "slot_id" in block.child_blocks
+
+    def test_slot_fill_with_empty_local_blocks(self):
+        """SlotFillBlock handles empty local_blocks list."""
+        block = SlotFillBlock(local_blocks=[])
+
+        # Should still have slot_id and content
+        assert "slot_id" in block.child_blocks
+        assert "content" in block.child_blocks
 
 
 class TestSlotFillBlockIntegration:

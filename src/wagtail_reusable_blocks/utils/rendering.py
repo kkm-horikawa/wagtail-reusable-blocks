@@ -66,7 +66,11 @@ def render_layout_with_slots(
         if slot_id in slot_map:
             # Replace element's children with slot content
             element.clear()
-            element.append(BeautifulSoup(slot_map[slot_id], "html.parser"))
+            # Parse slot content and append each child individually
+            # to avoid IndexError when appending document fragments
+            slot_soup = BeautifulSoup(slot_map[slot_id], "html.parser")
+            for child in list(slot_soup.children):
+                element.append(child)
         # else: keep default content (element's existing children)
 
     return mark_safe(str(soup))
