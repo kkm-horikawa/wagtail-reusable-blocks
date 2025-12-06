@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from django.urls import include, path, reverse
-from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import UpdatedAtColumn
@@ -141,14 +141,14 @@ def global_admin_js() -> str:
     if not ReusableBlockCache.is_enabled():
         return ""
 
-    return format_html(
+    return mark_safe(
         """
         <script>
-        document.addEventListener('DOMContentLoaded', function() {{
+        document.addEventListener('DOMContentLoaded', function() {
             // Handle clear cache button clicks
-            document.addEventListener('click', function(e) {{
+            document.addEventListener('click', function(e) {
                 const btn = e.target.closest('[data-clear-cache-url]');
-                if (btn) {{
+                if (btn) {
                     e.preventDefault();
                     const form = document.createElement('form');
                     form.method = 'POST';
@@ -164,9 +164,9 @@ def global_admin_js() -> str:
 
                     document.body.appendChild(form);
                     form.submit();
-                }}
-            }});
-        }});
+                }
+            });
+        });
         </script>
         """
     )
