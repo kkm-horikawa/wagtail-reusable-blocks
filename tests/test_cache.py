@@ -250,7 +250,9 @@ class TestReusableBlockCacheIntegration(TestCase):
 
         layout_model = ReusableBlock.objects.create(
             name="Layout for Cache Hit",
-            content=[{"type": "raw_html", "value": '<div data-slot="main">Default</div>'}],
+            content=[
+                {"type": "raw_html", "value": '<div data-slot="main">Default</div>'}
+            ],
         )
 
         layout_block = ReusableLayoutBlock()
@@ -279,7 +281,9 @@ class TestReusableBlockCacheIntegration(TestCase):
 
         layout_model = ReusableBlock.objects.create(
             name="Layout with Slots",
-            content=[{"type": "raw_html", "value": '<div data-slot="main">Default</div>'}],
+            content=[
+                {"type": "raw_html", "value": '<div data-slot="main">Default</div>'}
+            ],
         )
 
         layout_block = ReusableLayoutBlock()
@@ -291,7 +295,9 @@ class TestReusableBlockCacheIntegration(TestCase):
                         "type": "slot_fill",
                         "value": {
                             "slot_id": "main",
-                            "content": [{"type": "rich_text", "value": "<p>Filled</p>"}],
+                            "content": [
+                                {"type": "rich_text", "value": "<p>Filled</p>"}
+                            ],
                         },
                     }
                 ],
