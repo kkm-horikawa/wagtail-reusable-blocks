@@ -306,6 +306,11 @@ WAGTAIL_REUSABLE_BLOCKS = {
     'SLOT_ATTRIBUTE': 'data-slot',
     'SLOT_LABEL_ATTRIBUTE': 'data-slot-label',
     'RENDER_TIMEOUT': 5,
+
+    # v0.3.0 settings
+    'CACHE_ENABLED': True,
+    'CACHE_TIMEOUT': 3600,  # 1 hour
+    'CACHE_KEY_PREFIX': 'reusable_block',
 }
 ```
 
@@ -319,6 +324,9 @@ WAGTAIL_REUSABLE_BLOCKS = {
 | `SLOT_ATTRIBUTE` | `'data-slot'` | HTML attribute for slot detection | v0.2.0+ |
 | `SLOT_LABEL_ATTRIBUTE` | `'data-slot-label'` | Optional label attribute for slots | v0.2.0+ |
 | `RENDER_TIMEOUT` | `5` | Maximum render time in seconds | v0.2.0+ |
+| `CACHE_ENABLED` | `False` | Enable caching for rendered blocks | v0.3.0+ |
+| `CACHE_TIMEOUT` | `3600` | Cache TTL in seconds (1 hour default) | v0.3.0+ |
+| `CACHE_KEY_PREFIX` | `'reusable_block'` | Prefix for cache keys | v0.3.0+ |
 
 ## Advanced Usage
 
@@ -485,7 +493,7 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 - ✅ Auto-generated slugs
 - ✅ Searchable snippet chooser
 
-### v0.2.0 - Slot System (Current)
+### v0.2.0 - Slot System
 - ✅ ReusableLayoutBlock for layout templates with fillable slots
 - ✅ SlotFillBlock for injecting custom content into layout slots
 - ✅ Slot detection API endpoint (`/admin/reusable-blocks/blocks/{id}/slots/`)
@@ -496,19 +504,23 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 - ✅ Extended circular reference detection for slot-based nesting
 - ✅ Improved error messages with reference chains
 
-### v0.3.0 - Enterprise Features (In Development)
-- ✅ Caching for optimized rendering
+### v0.3.0 - Performance & Enterprise Features (Current)
+- ✅ Caching for optimized rendering with automatic invalidation
 - ✅ Revision support (undo/history)
 - ✅ Draft/Publish workflow (save drafts before publishing)
 - ✅ Locking (prevent concurrent editing)
 - ✅ Workflow integration (approval workflows)
 - ✅ Live preview in admin
 - ✅ Scheduled publishing (go live at / expire at)
+- ✅ Performance benchmarks and N+1 query prevention
 
 ## Documentation
 
 - [Architecture & Design Decisions](docs/ARCHITECTURE.md)
 - [Glossary of Terms](docs/GLOSSARY.md)
+- [Caching Guide](docs/CACHING.md) (v0.3.0+)
+- [Revisions & Workflows](docs/REVISIONS.md) (v0.3.0+)
+- [Performance Guide](docs/PERFORMANCE.md) (v0.3.0+)
 - [Contributing Guide](CONTRIBUTING.md)
 
 ## Project Links
