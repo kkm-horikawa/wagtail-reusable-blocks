@@ -9,7 +9,6 @@ from wagtail.blocks import (
     StreamBlock,
     StructBlock,
 )
-from wagtail.images.blocks import ImageChooserBlock
 
 if TYPE_CHECKING:
     from wagtail.blocks import StreamBlock as StreamBlockType
@@ -28,11 +27,12 @@ class SlotContentStreamBlock(StreamBlockType):  # type: ignore[misc]
     def __init__(self, **kwargs):  # type: ignore[no-untyped-def]
         # Import here to avoid circular dependency
         from .chooser import ReusableBlockChooserBlock
+        from .image import ImageBlock
 
         block_types = [
             ("rich_text", RichTextBlock()),
             ("raw_html", RawHTMLBlock()),
-            ("image", ImageChooserBlock()),
+            ("image", ImageBlock()),
             ("reusable_block", ReusableBlockChooserBlock()),
         ]
 

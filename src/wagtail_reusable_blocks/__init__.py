@@ -13,7 +13,11 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         from .blocks import ReusableBlockChooserBlock
 
         return ReusableBlockChooserBlock
+    if name == "ImageBlock":
+        from .blocks import ImageBlock
+
+        return ImageBlock
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["ReusableBlock", "ReusableBlockChooserBlock"]
+__all__ = ["ImageBlock", "ReusableBlock", "ReusableBlockChooserBlock"]
