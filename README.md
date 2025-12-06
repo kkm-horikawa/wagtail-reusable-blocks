@@ -467,9 +467,9 @@ Layout A → slot → Layout B → slot → Layout C ✅
 
 | Python | Django | Wagtail |
 |--------|--------|---------|
-| 3.10+ | 4.2, 5.1, 5.2 | 5.2, 6.4, 7.0, 7.2 |
+| 3.10+ | 4.2, 5.1, 5.2 | 6.4, 7.0, 7.2 |
 
-See our [CI configuration](.github/workflows/ci.yml) for the complete compatibility matrix (39 tested combinations).
+See our [CI configuration](.github/workflows/ci.yml) for the complete compatibility matrix.
 
 ## Features by Version
 

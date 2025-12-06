@@ -1,11 +1,21 @@
 """Layout block for slot-based composition."""
 
+import warnings
 from typing import TYPE_CHECKING
 
 from django.utils.safestring import mark_safe
-from wagtail.admin.telepath import register
 from wagtail.blocks import StreamBlock, StructBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
+
+# Wagtail 7.1+ moved telepath to wagtail.admin.telepath
+# For compatibility with older versions, try both locations
+try:
+    from wagtail.admin.telepath import register
+except ImportError:
+    # Wagtail < 7.1: use wagtail.telepath (suppress deprecation warning)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        from wagtail.telepath import register
 
 from ..widgets import ReusableLayoutBlockAdapter
 from .slot_fill import SlotFillBlock
