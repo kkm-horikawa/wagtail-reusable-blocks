@@ -19,6 +19,7 @@ from wagtail.models import (
     WorkflowMixin,
 )
 from wagtail.search import index
+from wagtail.snippets.blocks import SnippetChooserBlock
 
 if TYPE_CHECKING:
     from django.template.context import Context
@@ -37,7 +38,7 @@ class ReusableBlock(
 
     By default, this model is automatically registered as a Wagtail Snippet
     and ready to use immediately after installation. The default includes
-    RichTextBlock and RawHTMLBlock.
+    RichTextBlock, RawHTMLBlock, and nested ReusableBlock support.
 
     Quick Start (No Code Required):
         1. Add 'wagtail_reusable_blocks' to INSTALLED_APPS
@@ -87,7 +88,8 @@ class ReusableBlock(
     Attributes:
         name: Human-readable identifier for the block.
         slug: URL-safe unique identifier, auto-generated from name.
-        content: StreamField containing the block content (RichTextBlock and RawHTMLBlock by default).
+        content: StreamField containing the block content (RichTextBlock, RawHTMLBlock,
+                 and ReusableBlock by default).
         created_at: Timestamp when the block was created.
         updated_at: Timestamp when the block was last updated.
     """
@@ -110,6 +112,10 @@ class ReusableBlock(
         [
             ("rich_text", RichTextBlock()),
             ("raw_html", RawHTMLBlock()),
+            (
+                "reusable_block",
+                SnippetChooserBlock("wagtail_reusable_blocks.ReusableBlock"),
+            ),
         ],
         use_json_field=True,
         blank=True,
@@ -236,15 +242,14 @@ class ReusableBlock(
         Returns:
             List of ReusableBlock instances referenced in the content.
         """
-        from ..blocks import ReusableBlockChooserBlock, ReusableLayoutBlock
+        from ..blocks import ReusableLayoutBlock
 
         referenced_blocks: list[ReusableBlock] = []
 
         # Iterate through all blocks in the content StreamField
         for block in self.content:
-            # v0.1.0: Check ReusableBlockChooserBlock
-            if isinstance(block.block, ReusableBlockChooserBlock):
-                # block.value contains the selected ReusableBlock instance
+            # Check SnippetChooserBlock (includes ReusableBlockChooserBlock subclass)
+            if isinstance(block.block, SnippetChooserBlock):
                 if block.value and isinstance(block.value, ReusableBlock):
                     referenced_blocks.append(block.value)
 
@@ -284,15 +289,15 @@ class ReusableBlock(
         Returns:
             List of referenced ReusableBlocks
         """
-        from ..blocks import ReusableBlockChooserBlock, ReusableLayoutBlock
+        from ..blocks import ReusableLayoutBlock
 
         blocks: list[ReusableBlock] = []
 
         for bound_block in streamfield_value:
             block_type = bound_block.block
 
-            # ReusableBlockChooserBlock
-            if isinstance(block_type, ReusableBlockChooserBlock):
+            # Check SnippetChooserBlock (includes ReusableBlockChooserBlock subclass)
+            if isinstance(block_type, SnippetChooserBlock):
                 if bound_block.value and isinstance(bound_block.value, ReusableBlock):
                     blocks.append(bound_block.value)
 
