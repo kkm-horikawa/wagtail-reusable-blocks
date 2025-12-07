@@ -1,9 +1,10 @@
-"""Tests for HeadInjectionBlock and preview functionality."""
+"""Tests for HeadInjectionBlock, preview functionality, and nested ReusableBlock rendering."""
 
 import pytest
 
 from wagtail_reusable_blocks.blocks import HeadInjectionBlock
 from wagtail_reusable_blocks.models import ReusableBlock
+from wagtail_reusable_blocks.models.reusable_block import _ReusableBlockChooserBlock
 
 
 class TestHeadInjectionBlock:
@@ -117,3 +118,50 @@ class TestPreviewTemplateSettings:
 
         template = get_setting("PREVIEW_TEMPLATE")
         assert template == "custom/preview.html"
+
+
+@pytest.mark.django_db
+class TestNestedReusableBlockRendering:
+    """Tests for nested ReusableBlock rendering via _ReusableBlockChooserBlock."""
+
+    def test_nested_block_renders_content(self):
+        """Nested ReusableBlock renders its content, not just name."""
+        inner_block = ReusableBlock.objects.create(
+            name="Inner Block",
+            content=[("rich_text", "<p>Inner content</p>")],
+        )
+        outer_block = ReusableBlock.objects.create(
+            name="Outer Block",
+            content=[("reusable_block", inner_block)],
+        )
+        html = outer_block.render()
+        assert "<p>Inner content</p>" in html
+        assert "Inner Block" not in html  # Should not render name
+
+    def test_reusable_block_chooser_block_renders_none(self):
+        """_ReusableBlockChooserBlock returns empty string for None value."""
+        block = _ReusableBlockChooserBlock()
+        result = block.render_basic(None)
+        assert result == ""
+
+    def test_reusable_block_chooser_block_renders_content(self):
+        """_ReusableBlockChooserBlock renders the block's content."""
+        reusable = ReusableBlock.objects.create(
+            name="Test",
+            content=[("rich_text", "<p>Test content</p>")],
+        )
+        block = _ReusableBlockChooserBlock()
+        result = block.render_basic(reusable)
+        assert "<p>Test content</p>" in result
+
+    def test_reusable_block_chooser_block_max_depth(self):
+        """_ReusableBlockChooserBlock respects max nesting depth."""
+        reusable = ReusableBlock.objects.create(
+            name="Test",
+            content=[("rich_text", "<p>Test</p>")],
+        )
+        block = _ReusableBlockChooserBlock()
+        # Simulate being at max depth
+        context = {"_reusable_block_depth": 5}
+        result = block.render_basic(reusable, context=context)
+        assert "Maximum nesting depth exceeded" in result
