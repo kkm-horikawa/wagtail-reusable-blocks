@@ -18,6 +18,8 @@ DEFAULTS = {
     "CACHE_BACKEND": "default",
     "CACHE_TIMEOUT": 3600,  # 1 hour
     "CACHE_PREFIX": "wrb:",
+    # v0.5.0 settings - Preview
+    "PREVIEW_TEMPLATE": "wagtail_reusable_blocks/preview.html",
 }
 
 

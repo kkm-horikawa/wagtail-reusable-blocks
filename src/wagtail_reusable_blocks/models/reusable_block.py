@@ -9,7 +9,7 @@ from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import slugify
 from wagtail.admin.panels import FieldPanel, PublishingPanel
-from wagtail.blocks import RawHTMLBlock, RichTextBlock
+from wagtail.blocks import RawHTMLBlock, RichTextBlock, TextBlock
 from wagtail.fields import StreamField
 from wagtail.models import (
     DraftStateMixin,
@@ -25,6 +25,26 @@ if TYPE_CHECKING:
     from django.template.context import Context
 
 
+class _HeadInjectionBlock(TextBlock):  # type: ignore[misc]
+    """Block for injecting CSS/JS into <head> during snippet preview only.
+
+    This is an internal class used in the default ReusableBlock content.
+    For external use, import HeadInjectionBlock from wagtail_reusable_blocks.blocks.
+
+    The content is only applied during preview and ignored during normal rendering.
+    """
+
+    def render_basic(
+        self, value: str | None, context: dict[str, Any] | None = None
+    ) -> str:
+        """Return empty string during normal rendering."""
+        return ""
+
+    class Meta:
+        icon = "code"
+        label = "Preview Head Injection"
+
+
 class ReusableBlock(
     WorkflowMixin,  # type: ignore[misc]
     DraftStateMixin,  # type: ignore[misc]
@@ -38,7 +58,8 @@ class ReusableBlock(
 
     By default, this model is automatically registered as a Wagtail Snippet
     and ready to use immediately after installation. The default includes
-    RichTextBlock, RawHTMLBlock, and nested ReusableBlock support.
+    RichTextBlock, RawHTMLBlock, nested ReusableBlock support, and HeadInjectionBlock
+    for preview-only CSS/JS injection.
 
     Quick Start (No Code Required):
         1. Add 'wagtail_reusable_blocks' to INSTALLED_APPS
@@ -89,7 +110,7 @@ class ReusableBlock(
         name: Human-readable identifier for the block.
         slug: URL-safe unique identifier, auto-generated from name.
         content: StreamField containing the block content (RichTextBlock, RawHTMLBlock,
-                 and ReusableBlock by default).
+                 ReusableBlock, and HeadInjectionBlock by default).
         created_at: Timestamp when the block was created.
         updated_at: Timestamp when the block was last updated.
     """
@@ -116,6 +137,7 @@ class ReusableBlock(
                 "reusable_block",
                 SnippetChooserBlock("wagtail_reusable_blocks.ReusableBlock"),
             ),
+            ("head_injection", _HeadInjectionBlock()),
         ],
         use_json_field=True,
         blank=True,
@@ -391,7 +413,9 @@ class ReusableBlock(
     def get_preview_template(self, request: Any = None, mode_name: str = "") -> str:
         """Return the template to use for previewing this block.
 
-        Required by PreviewableMixin.
+        Required by PreviewableMixin. Uses a standalone preview template
+        that includes a full HTML document with <head> support for
+        HeadInjectionBlock content.
 
         Args:
             request: The HTTP request object.
@@ -402,14 +426,15 @@ class ReusableBlock(
         """
         from ..conf import get_setting
 
-        return str(get_setting("TEMPLATE"))
+        return str(get_setting("PREVIEW_TEMPLATE"))
 
     def get_preview_context(
         self, request: Any = None, mode_name: str = ""
     ) -> dict[str, Any]:
         """Return context for previewing this block.
 
-        Required by PreviewableMixin.
+        Required by PreviewableMixin. Collects HeadInjectionBlock content
+        to be injected into the preview template's <head> tag.
 
         Args:
             request: The HTTP request object.
@@ -418,4 +443,13 @@ class ReusableBlock(
         Returns:
             Context dictionary for template rendering.
         """
-        return {"block": self}
+        # Collect HeadInjectionBlock content
+        head_injection_content = []
+        for block in self.content:
+            if block.block_type == "head_injection" and block.value:
+                head_injection_content.append(block.value)
+
+        return {
+            "block": self,
+            "head_injection_content": head_injection_content,
+        }
