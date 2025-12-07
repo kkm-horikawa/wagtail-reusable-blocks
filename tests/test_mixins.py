@@ -156,9 +156,9 @@ class TestPreviewBehavior:
     """Tests for PreviewableMixin behavior."""
 
     def test_get_preview_template_returns_setting(self, settings):
-        """get_preview_template returns template from settings."""
+        """get_preview_template returns template from PREVIEW_TEMPLATE setting."""
         settings.WAGTAIL_REUSABLE_BLOCKS = {
-            "TEMPLATE": "custom/preview.html",
+            "PREVIEW_TEMPLATE": "custom/preview.html",
         }
         block = ReusableBlock(name="Test Block")
         assert block.get_preview_template() == "custom/preview.html"
