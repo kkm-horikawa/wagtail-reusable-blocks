@@ -2,7 +2,6 @@
 
 import pytest
 from django.core.exceptions import ValidationError
-from wagtail.blocks import RawHTMLBlock, RichTextBlock
 
 from wagtail_reusable_blocks.models import ReusableBlock
 
@@ -85,25 +84,11 @@ class TestNestingDepthConfiguration:
 
 @pytest.mark.django_db
 class TestCircularReferenceWithNesting:
-    """Tests for circular reference detection with actual nested blocks."""
+    """Tests for circular reference detection with actual nested blocks.
 
-    @pytest.fixture(autouse=True)
-    def patch_streamfield(self, monkeypatch):
-        """Patch ReusableBlock's content field to include ReusableBlockChooserBlock."""
-        from wagtail.blocks import StreamBlock
-
-        from wagtail_reusable_blocks.blocks import ReusableBlockChooserBlock
-
-        new_child_blocks = [
-            ("rich_text", RichTextBlock()),
-            ("raw_html", RawHTMLBlock()),
-            ("reusable_block", ReusableBlockChooserBlock()),
-        ]
-
-        new_stream_block = StreamBlock(new_child_blocks, required=False)
-        monkeypatch.setattr(
-            ReusableBlock.content.field, "stream_block", new_stream_block
-        )
+    Note: Since v0.5.0, ReusableBlockChooserBlock is included in the default
+    content StreamField, so no patching is required.
+    """
 
     def test_actual_circular_reference_detected(self):
         """Detect circular reference: A → B → A."""
