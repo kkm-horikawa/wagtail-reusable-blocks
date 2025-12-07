@@ -45,6 +45,65 @@ class _HeadInjectionBlock(TextBlock):  # type: ignore[misc]
         label = "Preview Head Injection"
 
 
+class _ReusableBlockChooserBlock(SnippetChooserBlock):  # type: ignore[misc]
+    """Internal SnippetChooserBlock that renders ReusableBlock content.
+
+    This is an internal class used in the default ReusableBlock content.
+    Standard SnippetChooserBlock.render_basic returns str(value) (the name),
+    but we need to render the actual content of the nested block.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize with ReusableBlock as the target model."""
+        super().__init__(target_model="wagtail_reusable_blocks.ReusableBlock", **kwargs)
+
+    def render_basic(
+        self, value: Any, context: dict[str, Any] | None = None
+    ) -> SafeString | str:
+        """Render the selected ReusableBlock's content instead of its name.
+
+        Args:
+            value: The selected ReusableBlock instance or None.
+            context: Optional context dictionary for rendering.
+
+        Returns:
+            Rendered HTML content of the ReusableBlock.
+        """
+        if value is None:
+            return ""
+
+        if context is None:
+            context = {}
+
+        # Import here to avoid circular imports
+        from ..conf import get_setting
+
+        # Track nesting depth to prevent infinite recursion
+        current_depth = context.get("_reusable_block_depth", 0)
+        max_depth = get_setting("MAX_NESTING_DEPTH")
+
+        if current_depth >= max_depth:
+            return mark_safe(
+                '<div class="reusable-block-max-depth-warning">'
+                "Maximum nesting depth exceeded</div>"
+            )
+
+        try:
+            # Create new context with incremented depth
+            nested_context = context.copy()
+            nested_context["_reusable_block_depth"] = current_depth + 1
+
+            # Render the nested block's content
+            rendered: SafeString | str = value.render(context=nested_context)
+            return rendered
+        except Exception:
+            return ""
+
+    class Meta:
+        icon = "snippet"
+        label = "Reusable Block"
+
+
 class ReusableBlock(
     WorkflowMixin,  # type: ignore[misc]
     DraftStateMixin,  # type: ignore[misc]
@@ -133,10 +192,7 @@ class ReusableBlock(
         [
             ("rich_text", RichTextBlock()),
             ("raw_html", RawHTMLBlock()),
-            (
-                "reusable_block",
-                SnippetChooserBlock("wagtail_reusable_blocks.ReusableBlock"),
-            ),
+            ("reusable_block", _ReusableBlockChooserBlock()),
             ("head_injection", _HeadInjectionBlock()),
         ],
         use_json_field=True,

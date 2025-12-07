@@ -25,8 +25,8 @@ class Migration(migrations.Migration):
                     0: ("wagtail.blocks.RichTextBlock", (), {}),
                     1: ("wagtail.blocks.RawHTMLBlock", (), {}),
                     2: (
-                        "wagtail.snippets.blocks.SnippetChooserBlock",
-                        ("wagtail_reusable_blocks.ReusableBlock",),
+                        "wagtail_reusable_blocks.models.reusable_block._ReusableBlockChooserBlock",
+                        (),
                         {},
                     ),
                     3: (
