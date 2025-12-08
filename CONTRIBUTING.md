@@ -765,6 +765,69 @@ Instead, we focus on:
 - **Why** it's important (context and motivation)
 - **How** it relates to other work (dependencies)
 
+## Translations (i18n)
+
+This project supports internationalization following Django and Wagtail conventions.
+
+### Translation File Structure
+
+```
+src/wagtail_reusable_blocks/
+└── locale/
+    ├── en/
+    │   └── LC_MESSAGES/
+    │       ├── django.po    # Source strings
+    │       └── django.mo    # Compiled (auto-generated)
+    └── ja/
+        └── LC_MESSAGES/
+            ├── django.po
+            └── django.mo
+```
+
+### For Developers
+
+#### Marking Strings for Translation
+
+```python
+# Python code
+from django.utils.translation import gettext_lazy as _
+
+name = models.CharField(_("Name"), max_length=255)
+```
+
+```html
+<!-- Templates -->
+{% load i18n %}
+<h1>{% translate "Reusable Blocks" %}</h1>
+```
+
+#### Extracting and Compiling Messages
+
+```bash
+# Extract translatable strings to .po files
+cd src/wagtail_reusable_blocks
+django-admin makemessages --locale=en --locale=ja
+
+# Compile .po to .mo files
+django-admin compilemessages
+```
+
+### For Translators
+
+1. Edit the `.po` file for your language in `src/wagtail_reusable_blocks/locale/<lang>/LC_MESSAGES/django.po`
+2. Add translations for each `msgid`:
+   ```po
+   msgid "Name"
+   msgstr "名前"
+   ```
+3. Submit a Pull Request
+
+### Supported Languages
+
+We aim to support all languages supported by Wagtail core. Priority languages:
+- English (en) - Source language
+- Japanese (ja)
+
 ## Milestones and Roadmap
 
 | Milestone | Focus |
@@ -772,6 +835,9 @@ Instead, we focus on:
 | [v0.1.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/1) | MVP - Basic reusable blocks |
 | [v0.2.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/2) | Slot-based templating |
 | [v0.3.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/3) | Performance & production ready |
+| [v0.4.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/5) | Default Blocks |
+| [v0.5.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/6) | Enhanced Default Features |
+| [v0.6.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/7) | Internationalization (i18n) |
 
 ## Key Documents
 
