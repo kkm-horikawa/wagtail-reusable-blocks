@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from wagtail.admin.auth import permission_denied
 
@@ -37,7 +38,7 @@ def clear_block_cache_view(request: HttpRequest, block_id: int) -> HttpResponse:
 
     messages.success(
         request,
-        f"Cache cleared for '{block.name}'.",
+        _("Cache cleared for '%(name)s'.") % {"name": block.name},
     )
 
     # Redirect back to the edit page
@@ -71,7 +72,7 @@ def clear_all_cache_view(request: HttpRequest) -> HttpResponse:
 
     messages.success(
         request,
-        "All ReusableBlock cache entries have been cleared.",
+        _("All ReusableBlock cache entries have been cleared."),
     )
 
     # Redirect back to the list page

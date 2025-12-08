@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.urls import include, path, reverse
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import LiveStatusTagColumn, UpdatedAtColumn
@@ -52,7 +53,7 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
 
     model = ReusableBlock
     icon = "snippet"
-    menu_label = "Reusable Blocks"
+    menu_label = _("Reusable Blocks")
     menu_order = 200
     add_to_admin_menu = True
 
@@ -129,7 +130,7 @@ def register_clear_cache_button(
 
     return [
         SnippetListingButton(
-            "Clear Cache",
+            _("Clear Cache"),
             reverse(
                 "wagtail_reusable_blocks:clear_block_cache",
                 args=[snippet.pk],

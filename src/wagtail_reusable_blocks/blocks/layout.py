@@ -4,6 +4,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from wagtail.blocks import StreamBlock, StructBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
 
@@ -69,7 +70,7 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
 
     layout = SnippetChooserBlock(
         target_model="wagtail_reusable_blocks.ReusableBlock",
-        help_text="Select a layout template with slot placeholders",
+        help_text=_("Select a layout template with slot placeholders"),
     )
 
     def __init__(self, local_blocks=None, **kwargs):  # type: ignore[no-untyped-def]
@@ -87,7 +88,7 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
                             ("slot_fill", SlotFillBlock()),  # type: ignore[no-untyped-call]
                         ],
                         required=False,
-                        help_text="Fill the slots in this layout template",
+                        help_text=_("Fill the slots in this layout template"),
                     ),
                 )
             ]
@@ -96,8 +97,8 @@ class ReusableLayoutBlock(StructBlockType):  # type: ignore[misc]
 
     class Meta:
         icon = "doc-empty"
-        label = "Reusable Layout"
-        help_text = "Layout template with customizable content slots"
+        label = _("Reusable Layout")
+        help_text = _("Layout template with customizable content slots")
         adapter_class = ReusableLayoutBlockAdapter
 
     def render(self, value, context=None):  # type: ignore[no-untyped-def]
