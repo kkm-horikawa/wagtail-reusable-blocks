@@ -835,6 +835,8 @@ We aim to support all languages supported by Wagtail core. Priority languages:
 | [v0.1.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/1) | MVP - Basic reusable blocks |
 | [v0.2.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/2) | Slot-based templating |
 | [v0.3.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/3) | Performance & production ready |
+| [v0.4.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/5) | Default Blocks |
+| [v0.5.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/6) | Enhanced Default Features |
 | [v0.6.0](https://github.com/kkm-horikawa/wagtail-reusable-blocks/milestone/7) | Internationalization (i18n) |
 
 ## Key Documents
