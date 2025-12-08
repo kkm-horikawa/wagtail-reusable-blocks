@@ -1,15 +1,15 @@
+{% load i18n wagtailcore_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview: {{ block.name }}</title>
+    <title>{% blocktranslate with name=block.name %}Preview: {{ name }}{% endblocktranslate %}</title>
     {% for head_content in head_injection_content %}
     {{ head_content|safe }}
     {% endfor %}
 </head>
 <body>
-    {% load wagtailcore_tags %}
     {% include_block block.content %}
 </body>
 </html>
