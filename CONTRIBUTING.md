@@ -767,7 +767,75 @@ Instead, we focus on:
 
 ## Translations (i18n)
 
+We welcome translations to make wagtail-reusable-blocks accessible to users worldwide.
 This project supports internationalization following Django and Wagtail conventions.
+
+### For Translators
+
+#### How to Contribute Translations
+
+1. **Fork and clone** the repository
+2. **Create a new locale** (if your language doesn't exist):
+   ```bash
+   cd src/wagtail_reusable_blocks
+   mkdir -p locale/<lang>/LC_MESSAGES
+   # Copy the English PO file as a starting point
+   cp locale/en/LC_MESSAGES/django.po locale/<lang>/LC_MESSAGES/django.po
+   ```
+3. **Edit the `.po` file** for your language in `src/wagtail_reusable_blocks/locale/<lang>/LC_MESSAGES/django.po`
+4. **Translate each `msgid`**:
+   ```po
+   #: models/reusable_block.py:184
+   msgid "name"
+   msgstr "名前"
+
+   #: wagtail_hooks.py:56
+   msgid "Reusable Blocks"
+   msgstr "再利用可能ブロック"
+   ```
+5. **Submit a Pull Request**
+
+#### Translation Guidelines
+
+- **Use formal language** appropriate for admin interfaces
+- **Keep translations concise** - match the length of the original when possible
+- **Preserve placeholders exactly** - keep `%(name)s`, `%(id)s`, etc. unchanged
+- **Match Wagtail core terminology** - use the same translations as Wagtail admin for consistency
+- **Don't translate**:
+  - Technical terms (e.g., "slug", "HTML")
+  - Brand names
+  - Code examples in comments
+
+#### PO File Format
+
+```po
+# Comment explaining context
+#: path/to/file.py:123
+msgid "Original English text"
+msgstr "Translated text"
+
+# For strings with placeholders
+#: views/cache.py:41
+#, python-format
+msgid "Cache cleared for '%(name)s'."
+msgstr "「%(name)s」のキャッシュをクリアしました。"
+```
+
+### Supported Languages
+
+We aim to support all languages supported by Wagtail core (56+ languages).
+
+**Current status:**
+- English (en) - Source language ✅
+- Japanese (ja) - In progress
+
+**Priority languages** (contributions welcome!):
+- Chinese (zh_Hans, zh_Hant)
+- Spanish (es)
+- French (fr)
+- German (de)
+- Portuguese (pt_BR, pt_PT)
+- Korean (ko)
 
 ### Translation File Structure
 
@@ -776,12 +844,12 @@ src/wagtail_reusable_blocks/
 └── locale/
     ├── en/
     │   └── LC_MESSAGES/
-    │       ├── django.po    # Source strings
-    │       └── django.mo    # Compiled (auto-generated)
-    └── ja/
+    │       ├── django.po    # Source strings (30 messages)
+    │       └── django.mo    # Compiled binary (auto-generated)
+    └── <lang>/
         └── LC_MESSAGES/
-            ├── django.po
-            └── django.mo
+            ├── django.po    # Translated strings
+            └── django.mo    # Compiled binary
 ```
 
 ### For Developers
@@ -789,16 +857,24 @@ src/wagtail_reusable_blocks/
 #### Marking Strings for Translation
 
 ```python
-# Python code
+# Python code - use gettext_lazy for module-level strings
 from django.utils.translation import gettext_lazy as _
 
 name = models.CharField(_("Name"), max_length=255)
+
+# Use gettext for runtime strings
+from django.utils.translation import gettext
+messages.success(request, gettext("Cache cleared."))
 ```
 
 ```html
-<!-- Templates -->
+<!-- Templates - use translate/blocktranslate tags -->
 {% load i18n %}
 <h1>{% translate "Reusable Blocks" %}</h1>
+
+{% blocktranslate with name=block.name %}
+Preview: {{ name }}
+{% endblocktranslate %}
 ```
 
 #### Extracting and Compiling Messages
@@ -808,25 +884,16 @@ name = models.CharField(_("Name"), max_length=255)
 cd src/wagtail_reusable_blocks
 django-admin makemessages --locale=en --locale=ja
 
-# Compile .po to .mo files
+# Compile .po to .mo files (required for runtime)
 django-admin compilemessages
 ```
 
-### For Translators
+### Release Cycle for Translations
 
-1. Edit the `.po` file for your language in `src/wagtail_reusable_blocks/locale/<lang>/LC_MESSAGES/django.po`
-2. Add translations for each `msgid`:
-   ```po
-   msgid "Name"
-   msgstr "名前"
-   ```
-3. Submit a Pull Request
-
-### Supported Languages
-
-We aim to support all languages supported by Wagtail core. Priority languages:
-- English (en) - Source language
-- Japanese (ja)
+1. New strings are added during development
+2. Before release, maintainers run `makemessages` to update PO files
+3. Translators have time to update translations via PRs
+4. Maintainers run `compilemessages` and include MO files in release
 
 ## Milestones and Roadmap
 
