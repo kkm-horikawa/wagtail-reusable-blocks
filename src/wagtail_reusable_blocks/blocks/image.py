@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from django.utils.translation import gettext_lazy as _
 from wagtail.blocks import StructBlock
 from wagtail.images.blocks import ImageChooserBlock
 
@@ -33,12 +34,12 @@ class ImageBlock(StructBlockType):  # type: ignore[misc]
 
     image = ImageChooserBlock(
         required=True,
-        label="Image",
-        help_text="Select an image to display",
+        label=_("Image"),
+        help_text=_("Select an image to display"),
     )
 
     class Meta:
         template = "wagtail_reusable_blocks/blocks/image.html"
         icon = "image"
-        label = "Image"
-        help_text = "Image with responsive format support"
+        label = _("Image")
+        help_text = _("Image with responsive format support")

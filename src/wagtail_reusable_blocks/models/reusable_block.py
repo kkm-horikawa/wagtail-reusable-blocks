@@ -8,6 +8,7 @@ from django.db import models
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
 from django.utils.text import slugify
+from django.utils.translation import gettext, gettext_lazy as _
 from wagtail.admin.panels import FieldPanel, PublishingPanel
 from wagtail.blocks import RawHTMLBlock, RichTextBlock, TextBlock
 from wagtail.fields import StreamField
@@ -42,7 +43,7 @@ class _HeadInjectionBlock(TextBlock):  # type: ignore[misc]
 
     class Meta:
         icon = "code"
-        label = "Preview Head Injection"
+        label = _("Preview Head Injection")
 
 
 class _ReusableBlockChooserBlock(SnippetChooserBlock):  # type: ignore[misc]
@@ -85,7 +86,8 @@ class _ReusableBlockChooserBlock(SnippetChooserBlock):  # type: ignore[misc]
         if current_depth >= max_depth:
             return mark_safe(
                 '<div class="reusable-block-max-depth-warning">'
-                "Maximum nesting depth exceeded</div>"
+                + str(_("Maximum nesting depth exceeded"))
+                + "</div>"
             )
 
         try:
@@ -101,7 +103,7 @@ class _ReusableBlockChooserBlock(SnippetChooserBlock):  # type: ignore[misc]
 
     class Meta:
         icon = "snippet"
-        label = "Reusable Block"
+        label = _("Reusable Block")
 
 
 class ReusableBlock(
@@ -179,14 +181,16 @@ class ReusableBlock(
 
     # Fields
     name = models.CharField(
+        _("name"),
         max_length=MAX_NAME_LENGTH,
-        help_text="Human-readable name for this reusable block",
+        help_text=_("Human-readable name for this reusable block"),
     )
     slug = models.SlugField(
+        _("slug"),
         unique=True,
         max_length=MAX_NAME_LENGTH,
         blank=True,
-        help_text="URL-safe identifier, auto-generated from name",
+        help_text=_("URL-safe identifier, auto-generated from name"),
     )
     content = StreamField(
         [
@@ -197,7 +201,8 @@ class ReusableBlock(
         ],
         use_json_field=True,
         blank=True,
-        help_text="The content of this reusable block",
+        verbose_name=_("content"),
+        help_text=_("The content of this reusable block"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -236,8 +241,8 @@ class ReusableBlock(
         """Model metadata."""
 
         ordering = ["-updated_at"]
-        verbose_name = "Reusable Block"
-        verbose_name_plural = "Reusable Blocks"
+        verbose_name = _("Reusable Block")
+        verbose_name_plural = _("Reusable Blocks")
         indexes = [
             models.Index(fields=["slug"]),
         ]
@@ -291,8 +296,11 @@ class ReusableBlock(
         # Check for self-reference
         if self.pk in visited:
             raise ValidationError(
-                f"Circular reference detected: Block '{self.name}' (id={self.pk}) "
-                f"references itself in the dependency chain."
+                gettext(
+                    "Circular reference detected: Block '%(name)s' (id=%(id)s) "
+                    "references itself in the dependency chain."
+                )
+                % {"name": self.name, "id": self.pk}
             )
 
         # Add current block to visited set
@@ -308,8 +316,11 @@ class ReusableBlock(
             except ValidationError as e:
                 # Re-raise with additional context
                 raise ValidationError(
-                    f"Circular reference detected: Block '{self.name}' references "
-                    f"block '{block.name}' which creates a cycle. {str(e)}"
+                    gettext(
+                        "Circular reference detected: Block '%(name)s' references "
+                        "block '%(ref_name)s' which creates a cycle. %(error)s"
+                    )
+                    % {"name": self.name, "ref_name": block.name, "error": str(e)}
                 ) from e
 
     def _get_referenced_blocks(self) -> list["ReusableBlock"]:

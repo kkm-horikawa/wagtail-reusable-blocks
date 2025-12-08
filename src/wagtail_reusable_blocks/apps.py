@@ -4,6 +4,7 @@ import logging
 
 from django.apps import AppConfig
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ class WagtailReusableBlocksConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "wagtail_reusable_blocks"
-    verbose_name = "Wagtail Reusable Blocks"
+    verbose_name = _("Wagtail Reusable Blocks")
 
     def ready(self) -> None:
         """
