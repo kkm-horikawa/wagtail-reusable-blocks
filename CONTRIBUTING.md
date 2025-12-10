@@ -828,7 +828,14 @@ This project supports internationalization following Django and Wagtail conventi
    msgid "Reusable Blocks"
    msgstr "再利用可能ブロック"
    ```
-5. **Submit a Pull Request**
+5. **Compile the `.mo` file** (required):
+   ```bash
+   cd src/wagtail_reusable_blocks
+   django-admin compilemessages --locale=<lang>
+   ```
+   This generates the `.mo` binary file that Django uses at runtime.
+   Both `.po` and `.mo` files must be included in your PR.
+6. **Submit a Pull Request**
 
 #### Translation Guidelines
 
