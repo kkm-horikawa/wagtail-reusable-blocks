@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
 from wagtail.blocks import TextBlock
 
 
@@ -65,4 +66,4 @@ class HeadInjectionBlock(TextBlock):  # type: ignore[misc]
 
     class Meta:
         icon = "code"
-        label = "Preview Head Injection"
+        label = _("Preview Head Injection")
