@@ -537,6 +537,25 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 BSD 3-Clause License. See [LICENSE](LICENSE) for details.
 
+## Philosophy
+
+> "The best user interface for a programmer is usually a programming language."
+> — [The Zen of Wagtail](https://docs.wagtail.org/en/stable/getting_started/the_zen_of_wagtail.html)
+
+We wholeheartedly embrace Wagtail's philosophy. Wagtail provides powerful systems like StreamField and StructBlock while keeping the core lightweight—free from features that may be unnecessary for some users. Many developers choose Wagtail over WordPress precisely because of this design philosophy.
+
+However, through building Wagtail sites, we discovered a practical limitation: **Wagtail excels at repository-level implementation, but the admin interface can become rigid** when dealing with shared layouts.
+
+For example, if you create a block for a sidebar or header used across pages, it becomes difficult to customize portions of that block on a per-page basis. As we focused more on UX, we noticed our block definitions multiplying and field counts exploding.
+
+This led to a realization: **Just as code is the best interface for developers, HTML is the most flexible interface for content layouts in the admin.** If editors could write flexible layouts in HTML and inject dynamic content (images, rich text) into specific areas, that would be the ultimate Wagtail editing experience.
+
+That's why we built this library.
+
+Programmers want to keep their repositories clean. They don't want to modify block definitions and risk deployments for minor layout tweaks. With wagtail-reusable-blocks, you can bring the flexibility of programming—Wagtail's core strength—directly into the admin interface.
+
+**Write layouts in HTML. Fill slots with content. Deploy zero code changes.**
+
 ## Inspiration
 
 - [WordPress Gutenberg Synced Patterns](https://wordpress.org/documentation/article/reusable-blocks/)
