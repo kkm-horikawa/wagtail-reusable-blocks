@@ -545,6 +545,41 @@ Examples:
    ```
 6. **Create a Pull Request** from your fork to `upstream/develop`
 
+### Testing Your Changes in a Wagtail Project
+
+Before submitting a PR, it's recommended to test your changes in a real Wagtail project:
+
+1. **Install from your fork branch**:
+   ```bash
+   # In your Wagtail project directory
+   pip install git+https://github.com/<your-username>/wagtail-reusable-blocks.git@<your-branch>
+   ```
+
+2. **Add to INSTALLED_APPS** (if not already):
+   ```python
+   INSTALLED_APPS = [
+       # ...
+       "wagtail_reusable_blocks",
+       # ...
+   ]
+   ```
+
+3. **Run migrations** (if your changes include model updates):
+   ```bash
+   python manage.py migrate
+   ```
+
+4. **For translation changes**, compile messages:
+   ```bash
+   python manage.py compilemessages
+   ```
+   And set the language in `settings.py`:
+   ```python
+   LANGUAGE_CODE = "en"  # Your language code (e.g., "ja", "de", "fr")
+   ```
+
+5. **Start the server** and verify your changes work correctly in Wagtail admin (`/admin/`)
+
 ### For Maintainers (Direct)
 
 We recommend using **Draft PRs** for planning and early feedback.
@@ -793,7 +828,14 @@ This project supports internationalization following Django and Wagtail conventi
    msgid "Reusable Blocks"
    msgstr "再利用可能ブロック"
    ```
-5. **Submit a Pull Request**
+5. **Compile the `.mo` file** (required):
+   ```bash
+   cd src/wagtail_reusable_blocks
+   django-admin compilemessages --locale=<lang>
+   ```
+   This generates the `.mo` binary file that Django uses at runtime.
+   Both `.po` and `.mo` files must be included in your PR.
+6. **Submit a Pull Request**
 
 #### Translation Guidelines
 
