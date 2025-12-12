@@ -26,6 +26,7 @@ class TestHTMLBlockImport:
 
         assert "HTMLBlock" in html.__all__
 
+
 class TestHTMLBlockUsage:
     """Test HTMLBlock is used correctly in the codebase."""
 
