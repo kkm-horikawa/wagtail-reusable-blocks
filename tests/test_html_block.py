@@ -1,6 +1,5 @@
 """Tests for the HTMLBlock conditional import."""
 
-import pytest
 from wagtail.blocks import RawHTMLBlock
 
 
@@ -26,7 +25,6 @@ class TestHTMLBlockImport:
         from wagtail_reusable_blocks.blocks import html
 
         assert "HTMLBlock" in html.__all__
-
 
 class TestHTMLBlockUsage:
     """Test HTMLBlock is used correctly in the codebase."""
