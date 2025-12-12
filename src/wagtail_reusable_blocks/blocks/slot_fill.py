@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from django.utils.translation import gettext_lazy as _
 from wagtail.blocks import (
     CharBlock,
     RawHTMLBlock,
@@ -92,8 +93,8 @@ class SlotFillBlock(StructBlockType):  # type: ignore[misc]
 
     slot_id = CharBlock(
         max_length=50,
-        help_text="The slot identifier to fill (e.g., 'main', 'sidebar')",
-        label="Slot ID",
+        help_text=_("The slot identifier to fill (e.g., 'main', 'sidebar')"),
+        label=_("Slot ID"),
     )
 
     def __init__(self, local_blocks=None, **kwargs):  # type: ignore[no-untyped-def]
@@ -109,8 +110,8 @@ class SlotFillBlock(StructBlockType):  # type: ignore[misc]
                 (
                     "content",
                     SlotContentStreamBlock(  # type: ignore[no-untyped-call]
-                        help_text="Content to inject into this slot",
-                        label="Slot Content",
+                        help_text=_("Content to inject into this slot"),
+                        label=_("Slot Content"),
                     ),
                 )
             ]
@@ -119,8 +120,8 @@ class SlotFillBlock(StructBlockType):  # type: ignore[misc]
 
     class Meta:
         icon = "placeholder"
-        label = "Slot Fill"
-        help_text = "Fill a specific slot with content"
+        label = _("Slot Fill")
+        help_text = _("Fill a specific slot with content")
 
 
 # Nesting support (Issue #49):

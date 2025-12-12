@@ -51,6 +51,7 @@ dev = [
     "django-stubs>=5.1",
     "tox>=4.0",
     "tox-uv>=1.0",
+    "pre-commit>=4.0",
 ]
 
 [build-system]

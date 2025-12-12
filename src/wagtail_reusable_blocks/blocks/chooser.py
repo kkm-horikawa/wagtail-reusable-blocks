@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from django.utils.safestring import SafeString
+from django.utils.translation import gettext_lazy as _
 from wagtail.snippets.blocks import SnippetChooserBlock
 
 from ..models import ReusableBlock
@@ -103,8 +104,8 @@ class ReusableBlockChooserBlock(SnippetChooserBlockType):  # type: ignore[misc]
             )
             return (
                 '<div class="reusable-block-max-depth-warning">'
-                "Maximum nesting depth exceeded"
-                "</div>"
+                + str(_("Maximum nesting depth exceeded"))
+                + "</div>"
             )
 
         try:
