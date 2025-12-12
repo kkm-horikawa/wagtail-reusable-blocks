@@ -9,8 +9,8 @@ Otherwise, falls back to Wagtail's standard RawHTMLBlock.
 from wagtail.blocks import RawHTMLBlock
 
 try:
-    from wagtail_html_editor.blocks import (
-        EnhancedHTMLBlock,  # type: ignore[import-not-found]
+    from wagtail_html_editor.blocks import (  # type: ignore[import-not-found]
+        EnhancedHTMLBlock,
     )
 
     HTMLBlock = EnhancedHTMLBlock  # pragma: no cover
