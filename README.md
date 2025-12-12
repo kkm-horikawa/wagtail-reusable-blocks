@@ -82,6 +82,16 @@ python manage.py migrate
 
 That's it! **Reusable Blocks** will now appear in your Wagtail admin under **Snippets**.
 
+### Enhanced HTML Editing (Optional)
+
+For a VS Code-like HTML editing experience with syntax highlighting, Emmet support, and fullscreen mode, install with the `editor` extra:
+
+```bash
+pip install wagtail-reusable-blocks[editor]
+```
+
+This installs [wagtail-html-editor](https://github.com/kkm-horikawa/wagtail-html-editor) and automatically enables enhanced editing for all HTML blocks. No additional configuration needed.
+
 ## Quick Start
 
 ### 1. Create a Reusable Block
