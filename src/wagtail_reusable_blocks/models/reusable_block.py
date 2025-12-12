@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 # Use EnhancedHTMLBlock if wagtail-html-editor is installed, otherwise fallback
 try:
-    from wagtail_html_editor.blocks import EnhancedHTMLBlock
+    from wagtail_html_editor.blocks import EnhancedHTMLBlock  # type: ignore[import-not-found]
 
     _HTMLBlock = EnhancedHTMLBlock
 except ImportError:
