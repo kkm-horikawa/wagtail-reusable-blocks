@@ -150,13 +150,15 @@ class TestImageBlockGifRendering:
         )
 
     def test_gif_renders_with_img_tag(self, block, gif_image):
-        """GIF images render with img tag (not picture tag)."""
+        """GIF images render with img tag using original file URL."""
         value = block.to_python({"image": gif_image.pk})
         html = block.render(value)
 
-        # GIF should use <img> tag directly, not <picture>
+        # GIF should use <img> tag with original file URL, not <picture>
         assert "<img" in html
         assert "<picture" not in html
+        # Should reference original GIF file, not a rendition
+        assert ".gif" in html
 
     def test_png_renders_with_picture_tag(self, block, png_image):
         """PNG images render with picture tag for format conversion."""
