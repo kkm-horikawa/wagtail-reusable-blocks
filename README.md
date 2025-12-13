@@ -515,37 +515,6 @@ Layout A → slot → Layout B → slot → Layout C ✅
 
 See our [CI configuration](.github/workflows/ci.yml) for the complete compatibility matrix.
 
-## Features by Version
-
-### v0.1.0 - MVP
-- ✅ ReusableBlock model with StreamField support
-- ✅ ReusableBlockChooserBlock for page integration
-- ✅ Admin UI with search, filtering, and copy functionality
-- ✅ Nested blocks with circular reference detection
-- ✅ Auto-generated slugs
-- ✅ Searchable snippet chooser
-
-### v0.2.0 - Slot System
-- ✅ ReusableLayoutBlock for layout templates with fillable slots
-- ✅ SlotFillBlock for injecting custom content into layout slots
-- ✅ Slot detection API endpoint (`/admin/reusable-blocks/blocks/{id}/slots/`)
-- ✅ Dynamic slot selection UI with JavaScript widget
-- ✅ Automatic slot detection from HTML `data-slot` attributes
-- ✅ Support for nested layouts (layouts within slots)
-- ✅ Default content preservation for unfilled slots
-- ✅ Extended circular reference detection for slot-based nesting
-- ✅ Improved error messages with reference chains
-
-### v0.3.0 - Performance & Enterprise Features (Current)
-- ✅ Caching for optimized rendering with automatic invalidation
-- ✅ Revision support (undo/history)
-- ✅ Draft/Publish workflow (save drafts before publishing)
-- ✅ Locking (prevent concurrent editing)
-- ✅ Workflow integration (approval workflows)
-- ✅ Live preview in admin
-- ✅ Scheduled publishing (go live at / expire at)
-- ✅ Performance benchmarks and N+1 query prevention
-
 ## Documentation
 
 - [Architecture & Design Decisions](docs/ARCHITECTURE.md)
