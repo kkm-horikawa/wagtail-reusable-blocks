@@ -90,7 +90,18 @@ For a VS Code-like HTML editing experience with syntax highlighting, Emmet suppo
 pip install wagtail-reusable-blocks[editor]
 ```
 
-This installs [wagtail-html-editor](https://github.com/kkm-horikawa/wagtail-html-editor) and automatically enables enhanced editing for all HTML blocks. No additional configuration needed.
+Then add `wagtail_html_editor` to your `INSTALLED_APPS`:
+
+```python
+INSTALLED_APPS = [
+    # ...
+    'wagtail_reusable_blocks',
+    'wagtail_html_editor',  # Add this for enhanced HTML editing
+    # ...
+]
+```
+
+This enables [wagtail-html-editor](https://github.com/kkm-horikawa/wagtail-html-editor) for all HTML blocks with syntax highlighting, Emmet abbreviations, and fullscreen mode.
 
 ## Quick Start
 
