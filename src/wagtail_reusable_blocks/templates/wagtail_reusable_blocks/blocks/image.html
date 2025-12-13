@@ -1,2 +1,6 @@
-{% load wagtailimages_tags %}
+{% load wagtailimages_tags reusable_blocks_tags %}
+{% if value.image|is_gif %}
+{% image value.image original alt=value.image.title loading="lazy" decoding="async" style="max-width: 100%; height: auto;" %}
+{% else %}
 {% picture value.image original format-{avif,webp,jpeg} preserve-svg alt=value.image.title loading="lazy" decoding="async" style="max-width: 100%; height: auto;" %}
+{% endif %}
