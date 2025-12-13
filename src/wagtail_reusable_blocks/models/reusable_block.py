@@ -27,6 +27,17 @@ if TYPE_CHECKING:
     from django.template.context import Context
 
 
+# Use EnhancedHTMLBlock if wagtail-html-editor is installed, otherwise fallback
+try:
+    from wagtail_html_editor.blocks import (  # type: ignore[import-not-found]
+        EnhancedHTMLBlock,
+    )
+
+    _HTMLBlock = EnhancedHTMLBlock  # pragma: no cover
+except ImportError:
+    _HTMLBlock = RawHTMLBlock
+
+
 class _HeadInjectionBlock(TextBlock):  # type: ignore[misc]
     """Block for injecting CSS/JS into <head> during snippet preview only.
 
@@ -196,7 +207,7 @@ class ReusableBlock(
     content = StreamField(
         [
             ("rich_text", RichTextBlock()),
-            ("raw_html", RawHTMLBlock()),
+            ("raw_html", _HTMLBlock()),
             ("reusable_block", _ReusableBlockChooserBlock()),
             ("head_injection", _HeadInjectionBlock()),
         ],

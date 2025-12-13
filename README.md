@@ -82,6 +82,27 @@ python manage.py migrate
 
 That's it! **Reusable Blocks** will now appear in your Wagtail admin under **Snippets**.
 
+### Enhanced HTML Editing (Optional)
+
+For a VS Code-like HTML editing experience with syntax highlighting, Emmet support, and fullscreen mode, install with the `editor` extra:
+
+```bash
+pip install wagtail-reusable-blocks[editor]
+```
+
+Then add `wagtail_html_editor` to your `INSTALLED_APPS`:
+
+```python
+INSTALLED_APPS = [
+    # ...
+    'wagtail_reusable_blocks',
+    'wagtail_html_editor',  # Add this for enhanced HTML editing
+    # ...
+]
+```
+
+This enables [wagtail-html-editor](https://github.com/kkm-horikawa/wagtail-html-editor) for all HTML blocks with syntax highlighting, Emmet abbreviations, and fullscreen mode.
+
 ## Quick Start
 
 ### 1. Create a Reusable Block
@@ -229,7 +250,7 @@ Go to **Snippets > Reusable Blocks** and create a new block:
 </div>
 ```
 
-**Slot attributes:**
+**Slot attributes** (custom HTML attributes defined by this library):
 - `data-slot="slot-id"` - **Required.** Unique identifier (e.g., "main", "sidebar-extra")
 - `data-slot-label="Display Name"` - **Optional.** Human-readable label shown in admin
 - Child elements - **Optional.** Default content displayed if slot is not filled
@@ -493,37 +514,6 @@ Layout A → slot → Layout B → slot → Layout C ✅
 | 3.10+ | 4.2, 5.1, 5.2 | 6.4, 7.0, 7.2 |
 
 See our [CI configuration](.github/workflows/ci.yml) for the complete compatibility matrix.
-
-## Features by Version
-
-### v0.1.0 - MVP
-- ✅ ReusableBlock model with StreamField support
-- ✅ ReusableBlockChooserBlock for page integration
-- ✅ Admin UI with search, filtering, and copy functionality
-- ✅ Nested blocks with circular reference detection
-- ✅ Auto-generated slugs
-- ✅ Searchable snippet chooser
-
-### v0.2.0 - Slot System
-- ✅ ReusableLayoutBlock for layout templates with fillable slots
-- ✅ SlotFillBlock for injecting custom content into layout slots
-- ✅ Slot detection API endpoint (`/admin/reusable-blocks/blocks/{id}/slots/`)
-- ✅ Dynamic slot selection UI with JavaScript widget
-- ✅ Automatic slot detection from HTML `data-slot` attributes
-- ✅ Support for nested layouts (layouts within slots)
-- ✅ Default content preservation for unfilled slots
-- ✅ Extended circular reference detection for slot-based nesting
-- ✅ Improved error messages with reference chains
-
-### v0.3.0 - Performance & Enterprise Features (Current)
-- ✅ Caching for optimized rendering with automatic invalidation
-- ✅ Revision support (undo/history)
-- ✅ Draft/Publish workflow (save drafts before publishing)
-- ✅ Locking (prevent concurrent editing)
-- ✅ Workflow integration (approval workflows)
-- ✅ Live preview in admin
-- ✅ Scheduled publishing (go live at / expire at)
-- ✅ Performance benchmarks and N+1 query prevention
 
 ## Documentation
 

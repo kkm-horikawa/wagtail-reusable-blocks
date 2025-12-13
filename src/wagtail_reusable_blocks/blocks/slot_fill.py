@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING
 from django.utils.translation import gettext_lazy as _
 from wagtail.blocks import (
     CharBlock,
-    RawHTMLBlock,
     RichTextBlock,
     StreamBlock,
     StructBlock,
 )
+
+from .html import HTMLBlock
 
 if TYPE_CHECKING:
     from wagtail.blocks import StreamBlock as StreamBlockType
@@ -32,7 +33,7 @@ class SlotContentStreamBlock(StreamBlockType):  # type: ignore[misc]
 
         block_types = [
             ("rich_text", RichTextBlock()),
-            ("raw_html", RawHTMLBlock()),
+            ("raw_html", HTMLBlock()),
             ("image", ImageBlock()),
             ("reusable_block", ReusableBlockChooserBlock()),
         ]
