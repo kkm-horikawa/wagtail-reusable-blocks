@@ -1,6 +1,7 @@
 """Template tags and filters for wagtail-reusable-blocks."""
 
 import os
+from typing import Any
 
 from django import template
 
@@ -8,7 +9,7 @@ register = template.Library()
 
 
 @register.filter
-def is_gif(image):
+def is_gif(image: Any) -> bool:
     """Check if an image is a GIF file.
 
     Args:
@@ -20,4 +21,4 @@ def is_gif(image):
     if not image or not hasattr(image, "file") or not image.file:
         return False
     _, ext = os.path.splitext(image.file.name)
-    return ext.lower() == ".gif"
+    return bool(ext.lower() == ".gif")
