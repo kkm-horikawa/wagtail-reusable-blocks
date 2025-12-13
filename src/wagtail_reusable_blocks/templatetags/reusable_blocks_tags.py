@@ -22,3 +22,19 @@ def is_gif(image: Any) -> bool:
         return False
     _, ext = os.path.splitext(image.file.name)
     return bool(ext.lower() == ".gif")
+
+
+@register.filter
+def is_svg(image: Any) -> bool:
+    """Check if an image is an SVG file.
+
+    Args:
+        image: A Wagtail Image instance
+
+    Returns:
+        True if the image is an SVG file, False otherwise
+    """
+    if not image or not hasattr(image, "file") or not image.file:
+        return False
+    _, ext = os.path.splitext(image.file.name)
+    return bool(ext.lower() == ".svg")
