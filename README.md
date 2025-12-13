@@ -250,7 +250,7 @@ Go to **Snippets > Reusable Blocks** and create a new block:
 </div>
 ```
 
-**Slot attributes:**
+**Slot attributes** (custom HTML attributes defined by this library):
 - `data-slot="slot-id"` - **Required.** Unique identifier (e.g., "main", "sidebar-extra")
 - `data-slot-label="Display Name"` - **Optional.** Human-readable label shown in admin
 - Child elements - **Optional.** Default content displayed if slot is not filled
