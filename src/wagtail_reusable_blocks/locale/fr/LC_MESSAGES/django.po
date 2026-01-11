@@ -1,0 +1,146 @@
+# French translation for wagtail-reusable-blocks
+# Copyright (C) 2026 wagtail-reusable-blocks contributors
+# This file is distributed under the same license as the PACKAGE package.
+# Steve De Jongh <dejongh.st@gmail.com>, 2026, https://github.com/sdejongh
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: wagtail-reusable-blocks 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-11 13:08+0100\n"
+"PO-Revision-Date: 2026-01-11 13:08+0100\n"
+"Last-Translator: Steve De Jongh <dejongh.sy@gmail.com>\n"
+"Language-Team: FRENCH <translation@localhost>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+
+#: apps.py:17
+msgid "Wagtail Reusable Blocks"
+msgstr "Blocs Réutilisables Wagtail"
+
+#: blocks/chooser.py:107 models/reusable_block.py:101
+msgid "Maximum nesting depth exceeded"
+msgstr "Profondeur d'imbrication maximale dépassée"
+
+#: blocks/head_injection.py:69 models/reusable_block.py:58
+msgid "Preview Head Injection"
+msgstr "Aperçu de l'injection d'en-tête"
+
+#: blocks/image.py:37 blocks/image.py:44
+msgid "Image"
+msgstr "Image"
+
+#: blocks/image.py:38
+msgid "Select an image to display"
+msgstr "Sélectionner une image à afficher"
+
+#: blocks/image.py:45
+msgid "Image with responsive format support"
+msgstr "Image avec prise en charge du format responsive"
+
+#: blocks/layout.py:73
+msgid "Select a layout template with slot placeholders"
+msgstr "Sélectionner un modèle de mise en page avec des emplacements"
+
+#: blocks/layout.py:91
+msgid "Fill the slots in this layout template"
+msgstr "Remplir les emplacements dans ce modèle de mise en page"
+
+#: blocks/layout.py:100
+msgid "Reusable Layout"
+msgstr "Mise en page réutilisable"
+
+#: blocks/layout.py:101
+msgid "Layout template with customizable content slots"
+msgstr "Modèle de mise en page avec des emplacements de contenu personnalisables"
+
+#: blocks/slot_fill.py:97
+msgid "The slot identifier to fill (e.g., 'main', 'sidebar')"
+msgstr "L'identifiant de l'emplacement à remplir (ex: 'main', 'sidebar')"
+
+#: blocks/slot_fill.py:98
+msgid "Slot ID"
+msgstr "ID de l'emplacement"
+
+#: blocks/slot_fill.py:114
+msgid "Content to inject into this slot"
+msgstr "Contenu à injecter dans cet emplacement"
+
+#: blocks/slot_fill.py:115
+msgid "Slot Content"
+msgstr "Contenu de l'emplacement"
+
+#: blocks/slot_fill.py:124
+msgid "Slot Fill"
+msgstr "Remplissage d'emplacement"
+
+#: blocks/slot_fill.py:125
+msgid "Fill a specific slot with content"
+msgstr "Remplir un emplacement spécifique avec du contenu"
+
+#: models/reusable_block.py:118 models/reusable_block.py:256
+msgid "Reusable Block"
+msgstr "Bloc réutilisable"
+
+#: models/reusable_block.py:196
+msgid "name"
+msgstr "nom"
+
+#: models/reusable_block.py:198
+msgid "Human-readable name for this reusable block"
+msgstr "Nom lisible pour ce bloc réutilisable"
+
+#: models/reusable_block.py:201
+msgid "slug"
+msgstr "slug"
+
+#: models/reusable_block.py:205
+msgid "URL-safe identifier, auto-generated from name"
+msgstr "Identifiant URL sécurisé, généré automatiquement à partir du nom"
+
+#: models/reusable_block.py:216
+msgid "content"
+msgstr "contenu"
+
+#: models/reusable_block.py:217
+msgid "The content of this reusable block"
+msgstr "Le contenu de ce bloc réutilisable"
+
+#: models/reusable_block.py:257 wagtail_hooks.py:56
+msgid "Reusable Blocks"
+msgstr "Blocs Réutilisables"
+
+#: models/reusable_block.py:312
+#, python-format
+msgid ""
+"Circular reference detected: Block '%(name)s' (id=%(id)s) references itself "
+"in the dependency chain."
+msgstr ""
+"Référence circulaire détectée : le bloc '%(name)s' (id=%(id)s) se référence "
+"lui-même dans la chaîne de dépendances."
+
+#: models/reusable_block.py:332
+#, python-format
+msgid ""
+"Circular reference detected: Block '%(name)s' references block "
+"'%(ref_name)s' which creates a cycle. %(error)s"
+msgstr ""
+"Référence circulaire détectée : le bloc '%(name)s' référence le bloc "
+"'%(ref_name)s' ce qui crée un cycle. %(error)s"
+
+#: views/cache.py:41
+#, python-format
+msgid "Cache cleared for '%(name)s'."
+msgstr "Cache vidé pour '%(name)s'."
+
+#: views/cache.py:75
+msgid "All ReusableBlock cache entries have been cleared."
+msgstr "Toutes les entrées de cache des blocs réutilisables ont été vidées."
+
+#: wagtail_hooks.py:133
+msgid "Clear Cache"
+msgstr "Vider le cache"
