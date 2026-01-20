@@ -1,0 +1,141 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: wagtail-reusable-blocks\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-20 15:21+0200\n"
+"PO-Revision-Date: 2026-01-20 15:21+0200\n"
+"Last-Translator: Maria Mitova <mmitova3@gmail.com>\n"
+"Language-Team: BULGARIAN <translation@localhost>\n"
+"Language: Bulgarian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: apps.py:17
+msgid "Wagtail Reusable Blocks"
+msgstr "Многократно използваеми блокове (Reusable Blocks) в Wagtail"
+
+#: blocks/chooser.py:107 models/reusable_block.py:101
+msgid "Maximum nesting depth exceeded"
+msgstr "Превишена е максималната дълбочина на влагане."
+
+#: blocks/head_injection.py:69 models/reusable_block.py:58
+msgid "Preview Head Injection"
+msgstr "Преглед на вмъкването в head"
+
+#: blocks/image.py:37 blocks/image.py:44
+msgid "Image"
+msgstr "Изображение"
+
+#: blocks/image.py:38
+msgid "Select an image to display"
+msgstr "Изебрете изображение, което да се показва"
+
+#: blocks/image.py:45
+msgid "Image with responsive format support"
+msgstr "Изображение с поддръжка на адаптивни (responsive) формати"
+
+#: blocks/layout.py:73
+msgid "Select a layout template with slot placeholders"
+msgstr "Изберете шаблон за оформление със слотове"
+
+#: blocks/layout.py:91
+msgid "Fill the slots in this layout template"
+msgstr "Запълнете слотовете в този шаблон"
+
+#: blocks/layout.py:100
+msgid "Reusable Layout"
+msgstr "Многократно използваемо оформление"
+
+#: blocks/layout.py:101
+msgid "Layout template with customizable content slots"
+msgstr "Шаблон за оформление с персонализируеми слотове"
+
+#: blocks/slot_fill.py:97
+msgid "The slot identifier to fill (e.g., 'main', 'sidebar')"
+msgstr "Идентификатор на незапълнен слот (напр. 'main', 'sidebar')"
+
+#: blocks/slot_fill.py:98
+msgid "Slot ID"
+msgstr "Идентификатор на слот"
+
+#: blocks/slot_fill.py:114
+msgid "Content to inject into this slot"
+msgstr "Съдържание, което може да бъде добавено към този слот"
+
+#: blocks/slot_fill.py:115
+msgid "Slot Content"
+msgstr "Съдържание на слот"
+
+#: blocks/slot_fill.py:124
+msgid "Slot Fill"
+msgstr "Попълване на слот"
+
+#: blocks/slot_fill.py:125
+msgid "Fill a specific slot with content"
+msgstr "Запълнете конкретен слот със съдържание"
+
+#: models/reusable_block.py:118 models/reusable_block.py:256
+msgid "Reusable Block"
+msgstr "Многократно използваем блок"
+
+#: models/reusable_block.py:196
+msgid "name"
+msgstr "име"
+
+#: models/reusable_block.py:198
+msgid "Human-readable name for this reusable block"
+msgstr "Човекоразбираемо име за този многократно използваем блок"
+
+#: models/reusable_block.py:201
+msgid "slug"
+msgstr "Кратко име (slug)"
+
+#: models/reusable_block.py:205
+msgid "URL-safe identifier, auto-generated from name"
+msgstr "Идентификатор, безопасен за URL, генериран автоматично от името"
+
+#: models/reusable_block.py:216
+msgid "content"
+msgstr "Съдържание"
+
+#: models/reusable_block.py:217
+msgid "The content of this reusable block"
+msgstr "Съдържанието на този многократно използваем блок"
+
+#: models/reusable_block.py:257 wagtail_hooks.py:56
+msgid "Reusable Blocks"
+msgstr "Многократно използваеми блокове"
+
+#: models/reusable_block.py:312
+#, python-format
+msgid ""
+"Circular reference detected: Block '%(name)s' (id=%(id)s) references itself "
+"in the dependency chain."
+msgstr "Циклична зависимост: блокът '%(name)s' (id=%(id)s) се позовава на себе си."
+
+#: models/reusable_block.py:332
+#, python-format
+msgid ""
+"Circular reference detected: Block '%(name)s' references block "
+"'%(ref_name)s' which creates a cycle. %(error)s"
+msgstr "Циклична зависимост: '%(name)s' се позовава на '%(ref_name)s', създавайки цикъл. %(error)s"
+
+#: views/cache.py:41
+#, python-format
+msgid "Cache cleared for '%(name)s'."
+msgstr "Кешът на '%(name)s' е изчистен"
+
+#: views/cache.py:75
+msgid "All ReusableBlock cache entries have been cleared."
+msgstr "Всички кеш записи за многократно използваемите блокове бяха изчистени."
+
+#: wagtail_hooks.py:133
+msgid "Clear Cache"
+msgstr "Изчисти кеша"
