@@ -27,15 +27,26 @@ if TYPE_CHECKING:
     from django.template.context import Context
 
 
-# Use EnhancedHTMLBlock if wagtail-html-editor is installed, otherwise fallback
+# Determine base class for HTML editing block
 try:
     from wagtail_html_editor.blocks import (  # type: ignore[import-not-found]
-        EnhancedHTMLBlock,
+        EnhancedHTMLBlock as _HTMLBlockBase,
     )
-
-    _HTMLBlock = EnhancedHTMLBlock  # pragma: no cover
 except ImportError:
-    _HTMLBlock = RawHTMLBlock
+    _HTMLBlockBase = RawHTMLBlock  # type: ignore[misc]
+
+
+class _ContentHTMLBlock(_HTMLBlockBase):  # type: ignore[misc]
+    """HTML block with a stable migration path.
+
+    Inherits from EnhancedHTMLBlock when wagtail-html-editor is installed,
+    otherwise falls back to RawHTMLBlock. The stable class path ensures
+    Django migrations remain deterministic regardless of optional dependencies.
+    """
+
+    class Meta:
+        icon = "code"
+        label = _("Raw HTML")
 
 
 class _HeadInjectionBlock(TextBlock):  # type: ignore[misc]
@@ -207,7 +218,7 @@ class ReusableBlock(
     content = StreamField(
         [
             ("rich_text", RichTextBlock()),
-            ("raw_html", _HTMLBlock()),
+            ("raw_html", _ContentHTMLBlock()),
             ("reusable_block", _ReusableBlockChooserBlock()),
             ("head_injection", _HeadInjectionBlock()),
         ],
