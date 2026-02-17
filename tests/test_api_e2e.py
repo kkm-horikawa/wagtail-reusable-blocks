@@ -5,8 +5,14 @@ in the Wagtail admin snippet editing and preview views.
 """
 
 import pytest
-import requests
-from playwright.sync_api import Page, expect
+
+playwright_sync_api = pytest.importorskip(
+    "playwright.sync_api", reason="playwright not installed"
+)
+Page = playwright_sync_api.Page
+expect = playwright_sync_api.expect
+
+import requests  # noqa: E402
 
 
 @pytest.fixture
