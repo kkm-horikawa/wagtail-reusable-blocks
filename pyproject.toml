@@ -41,6 +41,9 @@ Issues = "https://github.com/kkm-horikawa/wagtail-reusable-blocks/issues"
 Changelog = "https://github.com/kkm-horikawa/wagtail-reusable-blocks/releases"
 
 [project.optional-dependencies]
+api = [
+    "djangorestframework>=3.14",
+]
 editor = [
     "wagtail-html-editor>=1.0.0",
 ]
