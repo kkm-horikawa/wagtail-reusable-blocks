@@ -25,7 +25,6 @@ DEFAULTS = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "API_AUTHENTICATION_CLASSES": None,  # None means use DRF defaults
-    "API_BASE_URL": "",  # Base URL prefix for DRF router (empty = no prefix)
     "API_FILTER_FIELDS": ["slug", "live"],
     "API_SEARCH_FIELDS": ["name", "slug"],
 }

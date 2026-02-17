@@ -34,7 +34,7 @@ try:
         EnhancedHTMLBlock as _HTMLBlockBase,
     )
 except ImportError:
-    _HTMLBlockBase = RawHTMLBlock  # type: ignore[misc]
+    _HTMLBlockBase = RawHTMLBlock  # type: ignore[misc,unused-ignore]
 
 
 class _ContentHTMLBlock(_HTMLBlockBase):  # type: ignore[misc]

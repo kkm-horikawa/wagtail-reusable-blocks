@@ -18,7 +18,7 @@ class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[type
     - Revision creation on save
     """
 
-    content = serializers.JSONField(required=False, default=list)
+    content = serializers.JSONField(required=False, default=list)  # type: ignore[arg-type]
 
     class Meta:
         model = ReusableBlock
@@ -49,6 +49,18 @@ class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[type
         """Run model-level validation including circular reference detection."""
         if not attrs.get("slug") and attrs.get("name"):
             attrs["slug"] = slugify(attrs["name"])
+
+        # validate_slug only runs for explicit input; auto-generated slugs need checking here
+        slug = attrs.get("slug")
+        if slug:
+            qs = ReusableBlock.objects.filter(slug=slug)
+            if self.instance is not None:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    {"slug": "A reusable block with this slug already exists."}
+                )
+
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> ReusableBlock:
