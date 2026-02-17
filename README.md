@@ -42,6 +42,7 @@ Programmers want to keep their repositories clean. They don't want to modify blo
 - ✅ **Draft/Publish workflow** (v0.3.0+) - Save drafts before publishing
 - ✅ **Locking** (v0.3.0+) - Prevent concurrent editing conflicts
 - ✅ **Approval workflows** (v0.3.0+) - Integration with Wagtail workflows
+- ✅ **REST API** (v0.8.0+) - Wagtail API v2 read-only endpoint and DRF full CRUD endpoint
 
 ## Use Cases
 
@@ -103,6 +104,166 @@ INSTALLED_APPS = [
 ```
 
 This enables [wagtail-html-editor](https://github.com/kkm-horikawa/wagtail-html-editor) for all HTML blocks with syntax highlighting, Emmet abbreviations, and fullscreen mode.
+
+## REST API (v0.8.0+)
+
+wagtail-reusable-blocks provides optional REST API support via two independent integrations.
+
+### Installation
+
+Install with the `api` extra to include both Wagtail API v2 and Django REST Framework:
+
+```bash
+pip install wagtail-reusable-blocks[api]
+```
+
+Then add the required apps to `INSTALLED_APPS`:
+
+```python
+INSTALLED_APPS = [
+    # ...
+    'wagtail_reusable_blocks',
+    'wagtail.api',          # for Wagtail API v2 (read-only)
+    'rest_framework',       # for DRF CRUD
+    # ...
+]
+```
+
+### Quick Start
+
+#### Option A: Wagtail API v2 (read-only)
+
+Exposes published blocks as a standard Wagtail API v2 endpoint. Suitable for public content delivery (e.g., headless front-ends that only read content).
+
+```python
+# urls.py
+from wagtail.api.v2.router import WagtailAPIRouter
+from wagtail_reusable_blocks.api import ReusableBlockAPIViewSet
+
+api_router = WagtailAPIRouter("wagtailapi")
+api_router.register_endpoint("reusable-blocks", ReusableBlockAPIViewSet)
+
+urlpatterns = [
+    # ...
+    path("api/v2/", api_router.urls),
+]
+```
+
+#### Option B: DRF CRUD
+
+Exposes full create/read/update/delete operations via Django REST Framework. Suitable for admin tools or internal services that need to manage blocks programmatically.
+
+```python
+# urls.py
+from rest_framework.routers import DefaultRouter
+from wagtail_reusable_blocks.api import ReusableBlockModelViewSet
+
+router = DefaultRouter()
+router.register("reusable-blocks", ReusableBlockModelViewSet)
+
+urlpatterns = [
+    # ...
+    path("api/", include(router.urls)),
+]
+```
+
+### API Endpoints
+
+#### Wagtail API v2 (read-only)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v2/reusable-blocks/` | List published blocks |
+| `GET` | `/api/v2/reusable-blocks/<id>/` | Retrieve a published block |
+
+Only blocks with `live=True` are returned.
+
+#### DRF CRUD
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/reusable-blocks/` | List blocks |
+| `POST` | `/api/reusable-blocks/` | Create a block |
+| `GET` | `/api/reusable-blocks/<id>/` | Retrieve a block |
+| `PUT` | `/api/reusable-blocks/<id>/` | Replace a block |
+| `PATCH` | `/api/reusable-blocks/<id>/` | Partially update a block |
+| `DELETE` | `/api/reusable-blocks/<id>/` | Delete a block |
+
+Supports query parameters: `?slug=<slug>`, `?live=true`, `?search=<text>`.
+
+### Request / Response Examples
+
+#### List blocks (DRF)
+
+```
+GET /api/reusable-blocks/
+Authorization: Token <your-token>
+```
+
+```json
+[
+    {
+        "id": 1,
+        "name": "Summer Sale Banner",
+        "slug": "summer-sale-banner",
+        "content": [
+            {
+                "type": "rich_text",
+                "value": "<p>Summer sale — 20% off everything!</p>",
+                "id": "abc123"
+            }
+        ],
+        "live": true,
+        "created_at": "2025-06-01T09:00:00Z",
+        "updated_at": "2025-06-15T14:30:00Z"
+    }
+]
+```
+
+#### Create a block (DRF)
+
+```
+POST /api/reusable-blocks/
+Authorization: Token <your-token>
+Content-Type: application/json
+
+{
+    "name": "Contact Footer",
+    "content": [
+        {
+            "type": "rich_text",
+            "value": "<p>Contact us at hello@example.com</p>"
+        }
+    ]
+}
+```
+
+The `slug` field is auto-generated from `name` when omitted. The `live` field is read-only and managed through the Wagtail admin publish workflow.
+
+### Configuration
+
+API behaviour can be customised via `WAGTAIL_REUSABLE_BLOCKS` in your Django settings:
+
+```python
+WAGTAIL_REUSABLE_BLOCKS = {
+    # v0.8.0 settings - API
+    'API_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'API_AUTHENTICATION_CLASSES': None,  # None uses DRF DEFAULT_AUTHENTICATION_CLASSES
+    'API_FILTER_FIELDS': ['slug', 'live'],
+    'API_SEARCH_FIELDS': ['name', 'slug'],
+}
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `API_PERMISSION_CLASSES` | `['rest_framework.permissions.IsAuthenticated']` | Permission classes for the DRF CRUD ViewSet |
+| `API_AUTHENTICATION_CLASSES` | `None` (uses DRF defaults) | Authentication classes for the DRF CRUD ViewSet |
+| `API_FILTER_FIELDS` | `['slug', 'live']` | Fields available for filtering |
+| `API_SEARCH_FIELDS` | `['name', 'slug']` | Fields used for search queries |
+
+**Note:** The Wagtail API v2 endpoint (`ReusableBlockAPIViewSet`) uses Wagtail's own authentication mechanism and is not affected by `API_PERMISSION_CLASSES` or `API_AUTHENTICATION_CLASSES`.
 
 ## Quick Start
 
@@ -360,6 +521,10 @@ WAGTAIL_REUSABLE_BLOCKS = {
 | `CACHE_ENABLED` | `False` | Enable caching for rendered blocks | v0.3.0+ |
 | `CACHE_TIMEOUT` | `3600` | Cache TTL in seconds (1 hour default) | v0.3.0+ |
 | `CACHE_KEY_PREFIX` | `'reusable_block'` | Prefix for cache keys | v0.3.0+ |
+| `API_PERMISSION_CLASSES` | `['rest_framework.permissions.IsAuthenticated']` | Permission classes for DRF CRUD ViewSet | v0.8.0+ |
+| `API_AUTHENTICATION_CLASSES` | `None` | Authentication classes for DRF CRUD ViewSet (`None` uses DRF defaults) | v0.8.0+ |
+| `API_FILTER_FIELDS` | `['slug', 'live']` | Fields available for filtering | v0.8.0+ |
+| `API_SEARCH_FIELDS` | `['name', 'slug']` | Fields used for search queries | v0.8.0+ |
 
 ## Advanced Usage
 
@@ -523,6 +688,7 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 - [Caching Guide](docs/CACHING.md) (v0.3.0+)
 - [Revisions & Workflows](docs/REVISIONS.md) (v0.3.0+)
 - [Performance Guide](docs/PERFORMANCE.md) (v0.3.0+)
+- [REST API Guide](docs/API.md) (v0.8.0+)
 - [Contributing Guide](CONTRIBUTING.md)
 
 ## Project Links

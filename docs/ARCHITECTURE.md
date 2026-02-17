@@ -340,6 +340,67 @@ These are intentionally **not** planned:
 3. **A/B testing**: Should be separate package
 4. **Multi-site**: Adds complexity, can be added later
 
+## REST API Layer (v0.8.0)
+
+### Why Two ViewSets?
+
+The library ships two independent ViewSets that serve different audiences:
+
+| ViewSet | Base class | Access | Purpose |
+|---------|------------|--------|---------|
+| `ReusableBlockAPIViewSet` | `wagtail.api.v2.views.BaseAPIViewSet` | Read-only | Public content delivery for headless / JAMstack front-ends |
+| `ReusableBlockModelViewSet` | `rest_framework.viewsets.ModelViewSet` | Full CRUD | Internal tooling, CI pipelines, admin scripts |
+
+**Key Decision: Separate read-only and CRUD concerns**
+
+Merging them into a single ViewSet would force every integrator to reason about write permissions even when only reads are needed. Keeping them separate means:
+
+- Projects that only need public data include `ReusableBlockAPIViewSet` and never expose mutation endpoints.
+- Projects that need programmatic management include `ReusableBlockModelViewSet` and configure its permissions independently.
+- Each ViewSet can evolve at its own pace without coupling the two use-cases.
+
+### Authentication and Permission Delegation
+
+Neither ViewSet hard-codes authentication or permission logic. Instead, they delegate to the application:
+
+**`ReusableBlockAPIViewSet`** inherits Wagtail API v2's own authentication mechanism, which is already configured in each project's `WAGTAIL_API_*` settings. No additional configuration is needed.
+
+**`ReusableBlockModelViewSet`** reads two optional settings at request time:
+
+```python
+WAGTAIL_REUSABLE_BLOCKS = {
+    'API_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'API_AUTHENTICATION_CLASSES': None,  # None = use DRF DEFAULT_AUTHENTICATION_CLASSES
+}
+```
+
+The classes are resolved lazily via `import_string`, so they can be any dotted Python path. Setting `API_AUTHENTICATION_CLASSES` to `None` deliberately falls back to DRF's global `DEFAULT_AUTHENTICATION_CLASSES`, which avoids duplicating configuration that the project already manages.
+
+**Rationale: Do not impose a security model**
+
+This library cannot know whether a project exposes blocks publicly, behind session auth, or via token auth. Delegating to the application via settings means:
+
+- No breaking change when the project changes its auth strategy.
+- No need to subclass the ViewSet for a different permission scheme.
+- Consistent with how Wagtail itself handles authentication.
+
+### StreamField Serialization
+
+Wagtail's `StreamValue` is not a plain Python list—it is a lazy object that resolves block types at access time. The custom `StreamFieldField` bridges Wagtail and DRF:
+
+```
+Read  (to_representation):  StreamValue → stream_block.get_api_representation() → list[dict]
+Write (to_internal_value):  list[dict]  → stored as-is in validated_data → assigned to model field
+```
+
+**`get_api_representation`** is Wagtail's own method for producing the canonical JSON form of a StreamField (the same format the Wagtail API v2 uses internally). Delegating to it means the serialization format is always in sync with Wagtail's own API, even as block types change.
+
+**Write path**: The raw list from `to_internal_value` is assigned directly to `instance.content`. Wagtail's `StreamField` descriptor handles coercion to `StreamValue` on next access and stores it correctly in the JSON column.
+
+**Slug auto-generation**: When a `name` is supplied but `slug` is omitted (or explicitly set to `""`), the serializer calls `django.utils.text.slugify(name)` and validates uniqueness in the same `validate()` pass. This mirrors the behaviour of the Wagtail admin save handler.
+
+**Revision on save**: Both `create()` and `update()` call `instance.save_revision()` after persisting the model. This ensures every API write is traceable in Wagtail's revision history, exactly as if the change had been made through the admin.
+
 ## Questions This Document Should Answer
 
 When you return to this project, you should be able to answer:
@@ -355,3 +416,7 @@ When you return to this project, you should be able to answer:
 | Why store slot content in page? | Same layout, different content per page |
 | Why JavaScript widget for slots? | Better UX - auto-populated dropdowns instead of text input |
 | Can v0.1.0 and v0.2.0 coexist? | Yes! Fully backward compatible, use both in same page |
+| Why two ViewSets for API (v0.8.0)? | Separate read-only (public delivery) from CRUD (internal tooling) concerns |
+| Why delegate auth to the application? | Library cannot know each project's security model; settings-based delegation avoids hard-coding |
+| Why use `get_api_representation` for StreamField? | Delegates to Wagtail's own canonical serialization so output stays in sync with the Wagtail API v2 format |
+| Why call `save_revision()` on API write? | Keeps every API change traceable in Wagtail's revision history, same as admin saves |
