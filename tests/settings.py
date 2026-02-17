@@ -6,6 +6,9 @@ This is a minimal configuration for running tests.
 
 import os
 
+# Required for Playwright E2E tests (live_server + Django ORM in same thread)
+os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
 # Build paths inside the project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -112,6 +115,14 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.dummy.DummyCache",
     }
+}
+
+# DRF settings for testing
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
 }
 
 # Disable caching in tests by default
