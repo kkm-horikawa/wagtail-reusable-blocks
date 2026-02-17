@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from wagtail.admin.panels import FieldPanel, PublishingPanel
+from wagtail.api import APIField
 from wagtail.blocks import RawHTMLBlock, RichTextBlock, TextBlock
 from wagtail.fields import StreamField
 from wagtail.models import (
@@ -33,7 +34,7 @@ try:
         EnhancedHTMLBlock as _HTMLBlockBase,
     )
 except ImportError:
-    _HTMLBlockBase = RawHTMLBlock  # type: ignore[misc]
+    _HTMLBlockBase = RawHTMLBlock  # type: ignore[misc,unused-ignore]
 
 
 class _ContentHTMLBlock(_HTMLBlockBase):  # type: ignore[misc]
@@ -251,6 +252,16 @@ class ReusableBlock(
         FieldPanel("slug"),
         FieldPanel("content"),
         PublishingPanel(),
+    ]
+
+    # API fields for Wagtail API v2
+    api_fields = [
+        APIField("name"),
+        APIField("slug"),
+        APIField("content"),
+        APIField("created_at"),
+        APIField("updated_at"),
+        APIField("live"),
     ]
 
     # Search configuration
