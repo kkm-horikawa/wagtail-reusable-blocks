@@ -73,8 +73,12 @@ class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[misc
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         """Run model-level validation including circular reference detection."""
-        if not attrs.get("slug") and attrs.get("name"):
-            attrs["slug"] = slugify(attrs["name"])
+        # Auto-generate slug from name when:
+        # - Creating (instance is None) and no slug provided
+        # - Updating with slug explicitly set to empty string
+        if attrs.get("name") and not attrs.get("slug"):
+            if self.instance is None or "slug" in attrs:
+                attrs["slug"] = slugify(attrs["name"])
 
         # validate_slug only runs for explicit input; auto-generated slugs need checking here
         slug = attrs.get("slug")
