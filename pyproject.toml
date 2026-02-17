@@ -41,6 +41,9 @@ Issues = "https://github.com/kkm-horikawa/wagtail-reusable-blocks/issues"
 Changelog = "https://github.com/kkm-horikawa/wagtail-reusable-blocks/releases"
 
 [project.optional-dependencies]
+api = [
+    "djangorestframework>=3.14",
+]
 editor = [
     "wagtail-html-editor>=1.0.0",
 ]
@@ -55,6 +58,10 @@ dev = [
     "tox>=4.0",
     "tox-uv>=1.0",
     "pre-commit>=4.0",
+]
+e2e = [
+    "pytest-playwright>=0.5",
+    "requests>=2.28",
 ]
 
 [build-system]
@@ -115,7 +122,10 @@ quote-style = "double"
 DJANGO_SETTINGS_MODULE = "tests.settings"
 pythonpath = [".", "src"]
 testpaths = ["tests"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short -m 'not e2e'"
+markers = [
+    "e2e: End-to-End tests with Playwright (deselected by default)",
+]
 
 [tool.mypy]
 python_version = "3.10"
@@ -126,6 +136,10 @@ exclude = ["tests/"]
 
 [[tool.mypy.overrides]]
 module = ["wagtail.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["rest_framework.*"]
 ignore_missing_imports = true
 
 [tool.django-stubs]
@@ -153,6 +167,7 @@ deps =
     pytest-django>=4.8
     pytest-cov>=4.1
     pytest-benchmark>=4.0
+    djangorestframework>=3.14
     django42: Django~=4.2.0
     django51: Django~=5.1.0
     django52: Django~=5.2.0

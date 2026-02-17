@@ -20,6 +20,11 @@ DEFAULTS = {
     "CACHE_PREFIX": "wrb:",
     # v0.5.0 settings - Preview
     "PREVIEW_TEMPLATE": "wagtail_reusable_blocks/preview.html",
+    # v0.8.0 settings - API
+    "API_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "API_AUTHENTICATION_CLASSES": None,  # None means use DRF defaults
 }
 
 
