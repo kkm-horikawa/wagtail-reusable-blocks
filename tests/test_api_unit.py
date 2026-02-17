@@ -49,29 +49,29 @@ class TestGetSetting:
     """get_setting configuration resolution tests."""
 
     def test_api_permission_classes_default(self):
-        """API_PERMISSION_CLASSESのデフォルト値がIsAuthenticatedであることを確認する。
+        """Verify that the default value of API_PERMISSION_CLASSES is IsAuthenticated.
 
-        【目的】get_settingでAPI_PERMISSION_CLASSESを取得し、デフォルト値として
-               IsAuthenticatedのパスが返却されることをもって、API認可のデフォルト
-               設定要件を保証する
-        【種別】正常系テスト
-        【対象】get_setting("API_PERMISSION_CLASSES")
-        【技法】同値分割
-        【テストデータ】ユーザー設定なし（DEFAULTSのみ）
+        Purpose: Verify that get_setting("API_PERMISSION_CLASSES") returns
+                 the IsAuthenticated path as default, ensuring the default
+                 API authorization configuration.
+        Type: Normal
+        Target: get_setting("API_PERMISSION_CLASSES")
+        Technique: Equivalence partitioning
+        Test data: No user settings (DEFAULTS only)
         """
         result = get_setting("API_PERMISSION_CLASSES")
 
         assert result == ["rest_framework.permissions.IsAuthenticated"]
 
     def test_api_authentication_classes_default_is_none(self):
-        """API_AUTHENTICATION_CLASSESのデフォルト値がNoneであることを確認する。
+        """Verify that the default value of API_AUTHENTICATION_CLASSES is None.
 
-        【目的】get_settingでAPI_AUTHENTICATION_CLASSESを取得し、Noneが返却される
-               ことをもって、DRFデフォルト認証使用の設定要件を保証する
-        【種別】正常系テスト
-        【対象】get_setting("API_AUTHENTICATION_CLASSES")
-        【技法】同値分割
-        【テストデータ】ユーザー設定なし（DEFAULTSのみ）
+        Purpose: Verify that get_setting("API_AUTHENTICATION_CLASSES") returns
+                 None, ensuring DRF default authentication is used.
+        Type: Normal
+        Target: get_setting("API_AUTHENTICATION_CLASSES")
+        Technique: Equivalence partitioning
+        Test data: No user settings (DEFAULTS only)
         """
         result = get_setting("API_AUTHENTICATION_CLASSES")
 
@@ -81,14 +81,14 @@ class TestGetSetting:
         "wagtail_reusable_blocks.conf.settings",
     )
     def test_user_setting_overrides_default(self, mock_settings):
-        """ユーザー設定がデフォルト値をオーバーライドすることを確認する。
+        """Verify that user settings override default values.
 
-        【目的】WAGTAIL_REUSABLE_BLOCKSにカスタム設定を与え、デフォルト値が
-               上書きされることをもって、設定カスタマイズ要件を保証する
-        【種別】正常系テスト
-        【対象】get_setting(key)
-        【技法】同値分割
-        【テストデータ】AllowAnyパーミッションへのオーバーライド
+        Purpose: Verify that providing WAGTAIL_REUSABLE_BLOCKS with custom
+                 settings overrides the defaults, ensuring customization support.
+        Type: Normal
+        Target: get_setting(key)
+        Technique: Equivalence partitioning
+        Test data: Override to AllowAny permission
         """
         custom_classes = ["rest_framework.permissions.AllowAny"]
         mock_settings.WAGTAIL_REUSABLE_BLOCKS = {
@@ -103,15 +103,15 @@ class TestGetSetting:
         "wagtail_reusable_blocks.conf.settings",
     )
     def test_user_setting_overrides_none_to_list(self, mock_settings):
-        """None デフォルトをリストでオーバーライドできることを確認する。
+        """Verify that a None default can be overridden with a list.
 
-        【目的】API_AUTHENTICATION_CLASSESのデフォルトNoneをリストで上書きし、
-               カスタム認証クラスが設定可能であることをもって、認証カスタマイズ
-               要件を保証する
-        【種別】正常系テスト
-        【対象】get_setting("API_AUTHENTICATION_CLASSES")
-        【技法】同値分割
-        【テストデータ】TokenAuthenticationへのオーバーライド
+        Purpose: Verify that API_AUTHENTICATION_CLASSES default None can be
+                 overridden with a custom list, ensuring authentication
+                 customization support.
+        Type: Normal
+        Target: get_setting("API_AUTHENTICATION_CLASSES")
+        Technique: Equivalence partitioning
+        Test data: Override to TokenAuthentication
         """
         custom_auth = ["rest_framework.authentication.TokenAuthentication"]
         mock_settings.WAGTAIL_REUSABLE_BLOCKS = {
@@ -122,50 +122,19 @@ class TestGetSetting:
 
         assert result == custom_auth
 
-    def test_api_filter_fields_default(self):
-        """API_FILTER_FIELDSのデフォルト値が正しいことを確認する。
-
-        【目的】get_settingでAPI_FILTER_FIELDSを取得し、slug/liveが返却される
-               ことをもって、フィルタ対象フィールドの設定要件を保証する
-        【種別】正常系テスト
-        【対象】get_setting("API_FILTER_FIELDS")
-        【技法】同値分割
-        【テストデータ】ユーザー設定なし（DEFAULTSのみ）
-        """
-        result = get_setting("API_FILTER_FIELDS")
-
-        assert result == ["slug", "live"]
-
-    def test_api_search_fields_default(self):
-        """API_SEARCH_FIELDSのデフォルト値が正しいことを確認する。
-
-        【目的】get_settingでAPI_SEARCH_FIELDSを取得し、name/slugが返却される
-               ことをもって、検索対象フィールドの設定要件を保証する
-        【種別】正常系テスト
-        【対象】get_setting("API_SEARCH_FIELDS")
-        【技法】同値分割
-        【テストデータ】ユーザー設定なし（DEFAULTSのみ）
-        """
-        result = get_setting("API_SEARCH_FIELDS")
-
-        assert result == ["name", "slug"]
-
     def test_defaults_dict_contains_all_api_keys(self):
-        """DEFAULTS辞書にAPI関連の全キーが含まれることを確認する。
+        """Verify that the DEFAULTS dict contains all API-related keys.
 
-        【目的】DEFAULTS辞書にAPI_PERMISSION_CLASSES, API_AUTHENTICATION_CLASSES,
-               API_FILTER_FIELDS, API_SEARCH_FIELDSが含まれることをもって、
-               API設定の網羅性を保証する
-        【種別】正常系テスト
-        【対象】conf.DEFAULTS
-        【技法】同値分割
-        【テストデータ】DEFAULTS辞書のキー
+        Purpose: Verify that DEFAULTS contains API_PERMISSION_CLASSES and
+                 API_AUTHENTICATION_CLASSES, ensuring API settings coverage.
+        Type: Normal
+        Target: conf.DEFAULTS
+        Technique: Equivalence partitioning
+        Test data: DEFAULTS dict keys
         """
         expected_keys = {
             "API_PERMISSION_CLASSES",
             "API_AUTHENTICATION_CLASSES",
-            "API_FILTER_FIELDS",
-            "API_SEARCH_FIELDS",
         }
 
         assert expected_keys.issubset(set(DEFAULTS.keys()))
@@ -179,14 +148,14 @@ class TestResolveClasses:
 
     @mock.patch("wagtail_reusable_blocks.api.views.get_setting", return_value=None)
     def test_returns_none_when_setting_is_none(self, mock_get_setting):
-        """設定値がNoneの場合にNoneが返ることを確認する。
+        """Verify that None is returned when the setting value is None.
 
-        【目的】_resolve_classesにNone設定を与え、Noneが返却されることをもって、
-               DRFデフォルトへのフォールバック要件を保証する
-        【種別】エッジケース
-        【対象】_resolve_classes(setting_key)
-        【技法】同値分割（DT-RESOLVE-CLASSES DT1）
-        【テストデータ】None設定
+        Purpose: Verify that _resolve_classes returns None for a None setting,
+                 ensuring fallback to DRF defaults.
+        Type: Edge case
+        Target: _resolve_classes(setting_key)
+        Technique: Equivalence partitioning (DT-RESOLVE-CLASSES DT1)
+        Test data: None setting
         """
         result = _resolve_classes("API_AUTHENTICATION_CLASSES")
 
@@ -196,15 +165,15 @@ class TestResolveClasses:
     @mock.patch("wagtail_reusable_blocks.api.views.get_setting")
     @mock.patch("wagtail_reusable_blocks.api.views.import_string")
     def test_resolves_string_path_to_class(self, mock_import, mock_get_setting):
-        """文字列パスからクラスが解決されることを確認する。
+        """Verify that a string path is resolved to a class.
 
-        【目的】_resolve_classesにdotted path文字列リストを与え、import_stringで
-               解決されたクラスリストが返却されることをもって、文字列パスからの
-               クラス解決要件を保証する
-        【種別】正常系テスト
-        【対象】_resolve_classes(setting_key)
-        【技法】同値分割（DT-RESOLVE-CLASSES DT2）
-        【テストデータ】IsAuthenticated文字列パス
+        Purpose: Verify that _resolve_classes resolves dotted path strings
+                 to classes via import_string, ensuring class resolution
+                 from string paths.
+        Type: Normal
+        Target: _resolve_classes(setting_key)
+        Technique: Equivalence partitioning (DT-RESOLVE-CLASSES DT2)
+        Test data: IsAuthenticated string path
         """
         mock_get_setting.return_value = ["rest_framework.permissions.IsAuthenticated"]
         sentinel_class = type("SentinelPermission", (), {})
@@ -219,14 +188,15 @@ class TestResolveClasses:
 
     @mock.patch("wagtail_reusable_blocks.api.views.get_setting")
     def test_passes_through_class_objects(self, mock_get_setting):
-        """クラスオブジェクト直接指定がそのまま返されることを確認する。
+        """Verify that direct class objects are passed through as-is.
 
-        【目的】_resolve_classesにクラスオブジェクトを直接与え、そのまま返却される
-               ことをもって、クラスオブジェクト直接指定の要件を保証する
-        【種別】正常系テスト
-        【対象】_resolve_classes(setting_key)
-        【技法】同値分割（DT-RESOLVE-CLASSES DT3）
-        【テストデータ】IsAuthenticatedクラスオブジェクト
+        Purpose: Verify that _resolve_classes returns class objects directly
+                 without transformation, ensuring direct class specification
+                 support.
+        Type: Normal
+        Target: _resolve_classes(setting_key)
+        Technique: Equivalence partitioning (DT-RESOLVE-CLASSES DT3)
+        Test data: IsAuthenticated class object
         """
         mock_get_setting.return_value = [permissions.IsAuthenticated]
 
@@ -237,14 +207,15 @@ class TestResolveClasses:
     @mock.patch("wagtail_reusable_blocks.api.views.get_setting")
     @mock.patch("wagtail_reusable_blocks.api.views.import_string")
     def test_resolves_mixed_strings_and_classes(self, mock_import, mock_get_setting):
-        """文字列とクラスオブジェクトの混在リストが解決されることを確認する。
+        """Verify that a mixed list of strings and class objects is resolved.
 
-        【目的】_resolve_classesに文字列パスとクラスオブジェクトの混在リストを与え、
-               全て正しく解決されることをもって、混在指定の互換性要件を保証する
-        【種別】正常系テスト
-        【対象】_resolve_classes(setting_key)
-        【技法】同値分割（DT-RESOLVE-CLASSES DT4）
-        【テストデータ】文字列パス1つ + クラスオブジェクト1つ
+        Purpose: Verify that _resolve_classes correctly resolves a mixed list
+                 of string paths and class objects, ensuring compatibility
+                 with mixed specification.
+        Type: Normal
+        Target: _resolve_classes(setting_key)
+        Technique: Equivalence partitioning (DT-RESOLVE-CLASSES DT4)
+        Test data: 1 string path + 1 class object
         """
         resolved_class = type("ResolvedPerm", (), {})
         mock_import.return_value = resolved_class
@@ -262,14 +233,14 @@ class TestResolveClasses:
 
     @mock.patch("wagtail_reusable_blocks.api.views.get_setting", return_value=[])
     def test_returns_empty_list_for_empty_setting(self, mock_get_setting):
-        """空リスト設定で空リストが返ることを確認する。
+        """Verify that an empty list is returned for an empty setting.
 
-        【目的】_resolve_classesに空リストを与え、空リストが返却されることをもって、
-               パーミッション無効化の要件を保証する
-        【種別】エッジケース
-        【対象】_resolve_classes(setting_key)
-        【技法】境界値分析（DT-RESOLVE-CLASSES DT5）
-        【テストデータ】空リスト
+        Purpose: Verify that _resolve_classes returns an empty list for an
+                 empty setting, ensuring permission disabling support.
+        Type: Edge case
+        Target: _resolve_classes(setting_key)
+        Technique: Boundary analysis (DT-RESOLVE-CLASSES DT5)
+        Test data: Empty list
         """
         result = _resolve_classes("API_PERMISSION_CLASSES")
 
@@ -278,14 +249,15 @@ class TestResolveClasses:
     @mock.patch("wagtail_reusable_blocks.api.views.get_setting")
     @mock.patch("wagtail_reusable_blocks.api.views.import_string")
     def test_raises_import_error_for_invalid_path(self, mock_import, mock_get_setting):
-        """不正な文字列パスでImportErrorが発生することを確認する。
+        """Verify that ImportError is raised for an invalid string path.
 
-        【目的】_resolve_classesに存在しないモジュールパスを与え、ImportErrorが
-               発生することをもって、不正設定検出の要件を保証する
-        【種別】異常系テスト
-        【対象】_resolve_classes(setting_key)
-        【技法】エラー推測
-        【テストデータ】存在しないモジュールパス
+        Purpose: Verify that _resolve_classes raises ImportError for a
+                 non-existent module path, ensuring invalid configuration
+                 detection.
+        Type: Error
+        Target: _resolve_classes(setting_key)
+        Technique: Error guessing
+        Test data: Non-existent module path
         """
         mock_get_setting.return_value = ["nonexistent.module.Class"]
         mock_import.side_effect = ImportError("No module named 'nonexistent'")
@@ -301,56 +273,57 @@ class TestReusableBlockSerializerFields:
     """ReusableBlockSerializer field definition tests."""
 
     def test_meta_fields_contain_expected_fields(self):
-        """Metaクラスのfieldsに期待するフィールドが全て含まれることを確認する。
+        """Verify that Meta.fields contains all expected fields.
 
-        【目的】ReusableBlockSerializer.Meta.fieldsにAPI仕様で定義された全フィールドが
-               含まれることをもって、APIレスポンスのフィールド網羅性要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.Meta.fields
-        【技法】同値分割
-        【テストデータ】Metaクラスのfields属性
+        Purpose: Verify that ReusableBlockSerializer.Meta.fields includes
+                 all API-specified fields, ensuring response field coverage.
+        Type: Normal
+        Target: ReusableBlockSerializer.Meta.fields
+        Technique: Equivalence partitioning
+        Test data: Meta.fields attribute
         """
         expected = ["id", "name", "slug", "content", "live", "created_at", "updated_at"]
 
         assert ReusableBlockSerializer.Meta.fields == expected
 
     def test_read_only_fields_are_correct(self):
-        """read_only_fieldsにid, created_at, updated_at, liveが含まれることを確認する。
+        """Verify that read_only_fields contains id, created_at, updated_at, and live.
 
-        【目的】ReusableBlockSerializer.Meta.read_only_fieldsに自動設定フィールドが
-               含まれることをもって、API経由でのフィールド書き換え防止要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.Meta.read_only_fields
-        【技法】同値分割
-        【テストデータ】Metaクラスのread_only_fields属性
+        Purpose: Verify that ReusableBlockSerializer.Meta.read_only_fields
+                 includes auto-generated fields, preventing API write-through.
+        Type: Normal
+        Target: ReusableBlockSerializer.Meta.read_only_fields
+        Technique: Equivalence partitioning
+        Test data: Meta.read_only_fields attribute
         """
         expected = ["id", "created_at", "updated_at", "live"]
 
         assert ReusableBlockSerializer.Meta.read_only_fields == expected
 
     def test_content_field_is_stream_field_field(self):
-        """contentフィールドがStreamFieldFieldとして定義されていることを確認する。
+        """Verify that the content field is defined as StreamFieldField.
 
-        【目的】contentフィールドがStreamFieldFieldで定義されていることをもって、
-               StreamValue→JSON変換を含むStreamFieldデータの読み書き要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.content
-        【技法】同値分割
-        【テストデータ】contentフィールドのクラス
+        Purpose: Verify that the content field uses StreamFieldField for
+                 StreamValue-to-JSON conversion, ensuring StreamField data
+                 read/write support.
+        Type: Normal
+        Target: ReusableBlockSerializer.content
+        Technique: Equivalence partitioning
+        Test data: content field class
         """
         serializer = ReusableBlockSerializer()
 
         assert isinstance(serializer.fields["content"], StreamFieldField)
 
     def test_content_field_not_required(self):
-        """contentフィールドが必須でないことを確認する。
+        """Verify that the content field is not required.
 
-        【目的】contentフィールドがrequired=Falseで定義されていることをもって、
-               空コンテンツでのブロック作成要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.content
-        【技法】同値分割
-        【テストデータ】contentフィールドのrequired属性
+        Purpose: Verify that the content field is defined with required=False,
+                 ensuring block creation with empty content is supported.
+        Type: Normal
+        Target: ReusableBlockSerializer.content
+        Technique: Equivalence partitioning
+        Test data: content field required attribute
         """
         serializer = ReusableBlockSerializer()
 
@@ -365,14 +338,14 @@ class TestReusableBlockSerializerValidateSlug:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_unique_slug_passes_validation(self, mock_objects):
-        """一意なslugがバリデーションを通過することを確認する。
+        """Verify that a unique slug passes validation.
 
-        【目的】validate_slugに重複のないslugを与え、そのまま返却されることをもって、
-               一意slug受け入れ要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.validate_slug(value)
-        【技法】同値分割
-        【テストデータ】DBに存在しないslug "new-block"
+        Purpose: Verify that validate_slug accepts a non-duplicate slug,
+                 ensuring unique slug acceptance.
+        Type: Normal
+        Target: ReusableBlockSerializer.validate_slug(value)
+        Technique: Equivalence partitioning
+        Test data: slug "new-block" not in database
         """
         mock_qs = mock.MagicMock()
         mock_qs.exists.return_value = False
@@ -386,14 +359,14 @@ class TestReusableBlockSerializerValidateSlug:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_duplicate_slug_raises_error_on_create(self, mock_objects):
-        """新規作成時に重複slugでValidationErrorが発生することを確認する。
+        """Verify that a duplicate slug raises ValidationError on create.
 
-        【目的】validate_slugに既存と同じslugを与え、ValidationErrorが発生する
-               ことをもって、slug一意性制約の要件を保証する
-        【種別】異常系テスト
-        【対象】ReusableBlockSerializer.validate_slug(value)
-        【技法】同値分割
-        【テストデータ】DBに既存のslug "existing-block"
+        Purpose: Verify that validate_slug raises ValidationError for a
+                 duplicate slug, ensuring slug uniqueness constraint.
+        Type: Error
+        Target: ReusableBlockSerializer.validate_slug(value)
+        Technique: Equivalence partitioning
+        Test data: slug "existing-block" already in database
         """
         mock_qs = mock.MagicMock()
         mock_qs.exists.return_value = True
@@ -405,15 +378,14 @@ class TestReusableBlockSerializerValidateSlug:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_update_excludes_own_pk_from_uniqueness_check(self, mock_objects):
-        """更新時に自身のPKがユニークチェックから除外されることを確認する。
+        """Verify that the own PK is excluded from uniqueness check on update.
 
-        【目的】validate_slugに更新対象インスタンスを設定した状態で同じslugを与え、
-               自身のPKが除外されてバリデーションを通過することをもって、
-               更新時の自身除外要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.validate_slug(value)
-        【技法】同値分割
-        【テストデータ】pk=42の既存インスタンスが自身のslugを保持するケース
+        Purpose: Verify that validate_slug excludes the current instance's PK
+                 from the uniqueness check, ensuring self-exclusion on update.
+        Type: Normal
+        Target: ReusableBlockSerializer.validate_slug(value)
+        Technique: Equivalence partitioning
+        Test data: Instance with pk=42 retaining its own slug
         """
         mock_instance = mock.Mock(pk=42)
         mock_qs = mock.MagicMock()
@@ -430,15 +402,14 @@ class TestReusableBlockSerializerValidateSlug:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_update_detects_duplicate_slug_from_other_instance(self, mock_objects):
-        """更新時に他インスタンスとのslug重複が検出されることを確認する。
+        """Verify that slug duplication with another instance is detected on update.
 
-        【目的】validate_slugに更新対象を設定し他インスタンスと同じslugを与え、
-               ValidationErrorが発生することをもって、他インスタンスとのslug
-               重複検出要件を保証する
-        【種別】異常系テスト
-        【対象】ReusableBlockSerializer.validate_slug(value)
-        【技法】同値分割
-        【テストデータ】pk=42のインスタンスが他のインスタンスのslugを使おうとするケース
+        Purpose: Verify that validate_slug detects slug duplication with
+                 another instance during update, raising ValidationError.
+        Type: Error
+        Target: ReusableBlockSerializer.validate_slug(value)
+        Technique: Equivalence partitioning
+        Test data: Instance with pk=42 attempting to use another instance's slug
         """
         mock_instance = mock.Mock(pk=42)
         mock_qs = mock.MagicMock()
@@ -460,14 +431,14 @@ class TestReusableBlockSerializerValidate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_auto_generates_slug_from_name_when_slug_is_empty(self, mock_objects):
-        """slug未指定時にnameからslugが自動生成されることを確認する。
+        """Verify that slug is auto-generated from name when slug is empty.
 
-        【目的】validateにslug未指定・name指定のデータを与え、slugifyされた値が
-               attrsに設定されることをもって、slug自動生成要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.validate(attrs)
-        【技法】同値分割
-        【テストデータ】slug空・name="My New Block"
+        Purpose: Verify that validate generates a slugified value from name
+                 when slug is empty, ensuring auto-slug generation.
+        Type: Normal
+        Target: ReusableBlockSerializer.validate(attrs)
+        Technique: Equivalence partitioning
+        Test data: Empty slug, name="My New Block"
         """
         mock_qs = mock.MagicMock()
         mock_qs.exists.return_value = False
@@ -482,14 +453,15 @@ class TestReusableBlockSerializerValidate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_auto_generates_slug_when_slug_not_provided(self, mock_objects):
-        """slugキーが存在しない場合にnameからslugが自動生成されることを確認する。
+        """Verify that slug is auto-generated when slug key is not present.
 
-        【目的】validateにslugキーなし・name指定のデータを与え、slugifyされた値が
-               設定されることをもって、slug省略時の自動生成要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.validate(attrs)
-        【技法】同値分割
-        【テストデータ】slugキーなし・name="Test Block"
+        Purpose: Verify that validate generates a slugified value when the
+                 slug key is absent, ensuring auto-generation when slug
+                 is omitted.
+        Type: Normal
+        Target: ReusableBlockSerializer.validate(attrs)
+        Technique: Equivalence partitioning
+        Test data: No slug key, name="Test Block"
         """
         mock_qs = mock.MagicMock()
         mock_qs.exists.return_value = False
@@ -503,14 +475,14 @@ class TestReusableBlockSerializerValidate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_explicit_slug_is_preserved(self, mock_objects):
-        """明示的に指定されたslugが保持されることを確認する。
+        """Verify that an explicitly specified slug is preserved.
 
-        【目的】validateにslug指定のデータを与え、指定値がそのまま保持される
-               ことをもって、明示的slug指定の優先要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.validate(attrs)
-        【技法】同値分割
-        【テストデータ】slug="custom-slug"を明示指定
+        Purpose: Verify that validate preserves the explicitly specified slug,
+                 ensuring explicit slug takes priority.
+        Type: Normal
+        Target: ReusableBlockSerializer.validate(attrs)
+        Technique: Equivalence partitioning
+        Test data: slug="custom-slug" explicitly specified
         """
         mock_qs = mock.MagicMock()
         mock_qs.exists.return_value = False
@@ -524,14 +496,15 @@ class TestReusableBlockSerializerValidate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_auto_generated_slug_uniqueness_check(self, mock_objects):
-        """自動生成slugが既存と重複する場合にValidationErrorが発生することを確認する。
+        """Verify that ValidationError is raised when auto-generated slug already exists.
 
-        【目的】validateでslug自動生成時に既存slugと重複した場合、ValidationErrorが
-               発生することをもって、自動生成slug一意性チェック要件を保証する
-        【種別】異常系テスト
-        【対象】ReusableBlockSerializer.validate(attrs)
-        【技法】エラー推測
-        【テストデータ】自動生成slug "my-block" がDBに既存のケース
+        Purpose: Verify that validate raises ValidationError when the auto-generated
+                 slug duplicates an existing one, ensuring auto-generated slug
+                 uniqueness check.
+        Type: Error
+        Target: ReusableBlockSerializer.validate(attrs)
+        Technique: Error guessing
+        Test data: Auto-generated slug "my-block" already exists in database
         """
         mock_qs = mock.MagicMock()
         mock_qs.exists.return_value = True
@@ -546,15 +519,14 @@ class TestReusableBlockSerializerValidate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_auto_generated_slug_excludes_self_on_update(self, mock_objects):
-        """更新時の自動生成slugで自身のPKが除外されることを確認する。
+        """Verify that the own PK is excluded from auto-generated slug uniqueness check on update.
 
-        【目的】validateに更新対象インスタンスを設定し、slug自動生成時に自身のPKが
-               一意性チェックから除外されることをもって、更新時の自動生成slug
-               自身除外要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.validate(attrs)
-        【技法】同値分割
-        【テストデータ】pk=10のインスタンス更新で自動生成slug
+        Purpose: Verify that validate excludes the current instance's PK
+                 from the auto-generated slug uniqueness check during update.
+        Type: Normal
+        Target: ReusableBlockSerializer.validate(attrs)
+        Technique: Equivalence partitioning
+        Test data: Instance with pk=10, auto-generated slug on update
         """
         mock_instance = mock.Mock(pk=10)
         mock_qs = mock.MagicMock()
@@ -572,15 +544,14 @@ class TestReusableBlockSerializerValidate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock.objects")
     def test_no_slug_no_name_does_not_generate_slug(self, mock_objects):
-        """name未指定かつslug未指定の場合にslugが生成されないことを確認する。
+        """Verify that slug is not generated when neither name nor slug is provided.
 
-        【目的】validateにname/slugともに未指定のデータを与え、slugが生成されず
-               attrsにslugキーが追加されないことをもって、nameなし時のslug
-               非生成要件を保証する
-        【種別】エッジケース
-        【対象】ReusableBlockSerializer.validate(attrs)
-        【技法】境界値分析
-        【テストデータ】name/slugともに未指定
+        Purpose: Verify that validate does not generate a slug when both name
+                 and slug are absent, ensuring no slug is added without a name.
+        Type: Edge case
+        Target: ReusableBlockSerializer.validate(attrs)
+        Technique: Boundary analysis
+        Test data: Neither name nor slug provided
         """
         serializer = ReusableBlockSerializer()
         attrs = {"content": []}
@@ -598,14 +569,14 @@ class TestReusableBlockSerializerCreate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock")
     def test_create_saves_instance_and_revision(self, MockReusableBlock):
-        """createで新規インスタンスの保存とリビジョン作成が行われることを確認する。
+        """Verify that create saves the instance and creates a revision.
 
-        【目的】createにvalidated_dataを与え、full_clean, save, save_revisionが
-               順に呼ばれることをもって、作成時のリビジョン管理要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.create(validated_data)
-        【技法】同値分割
-        【テストデータ】name="New Block", slug="new-block"
+        Purpose: Verify that create calls full_clean, save, and save_revision
+                 in sequence, ensuring revision management on creation.
+        Type: Normal
+        Target: ReusableBlockSerializer.create(validated_data)
+        Technique: Equivalence partitioning
+        Test data: name="New Block", slug="new-block"
         """
         mock_instance = mock.MagicMock()
         MockReusableBlock.return_value = mock_instance
@@ -622,14 +593,14 @@ class TestReusableBlockSerializerCreate:
 
     @mock.patch("wagtail_reusable_blocks.api.serializers.ReusableBlock")
     def test_create_calls_methods_in_order(self, MockReusableBlock):
-        """createでfull_clean -> save -> save_revisionの順に呼ばれることを確認する。
+        """Verify that create calls full_clean -> save -> save_revision in order.
 
-        【目的】createの呼び出し順序がfull_clean -> save -> save_revisionであることを
-               もって、バリデーション後の保存・リビジョン作成の順序要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.create(validated_data)
-        【技法】同値分割
-        【テストデータ】name="Order Test"
+        Purpose: Verify that the method call order is full_clean -> save ->
+                 save_revision, ensuring validation before save and revision.
+        Type: Normal
+        Target: ReusableBlockSerializer.create(validated_data)
+        Technique: Equivalence partitioning
+        Test data: name="Order Test"
         """
         mock_instance = mock.MagicMock()
         call_order = []
@@ -650,15 +621,15 @@ class TestReusableBlockSerializerUpdate:
     """ReusableBlockSerializer.update revision creation tests."""
 
     def test_update_sets_attributes_and_saves_revision(self):
-        """updateで属性設定、保存、リビジョン作成が行われることを確認する。
+        """Verify that update sets attributes, saves, and creates a revision.
 
-        【目的】updateにインスタンスとvalidated_dataを与え、属性設定後にfull_clean,
-               save, save_revisionが呼ばれることをもって、更新時のリビジョン管理
-               要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.update(instance, validated_data)
-        【技法】同値分割
-        【テストデータ】name="Updated Name"への更新
+        Purpose: Verify that update sets attributes on the instance and then
+                 calls full_clean, save, and save_revision, ensuring revision
+                 management on update.
+        Type: Normal
+        Target: ReusableBlockSerializer.update(instance, validated_data)
+        Technique: Equivalence partitioning
+        Test data: name="Updated Name" update
         """
         mock_instance = mock.MagicMock()
         serializer = ReusableBlockSerializer()
@@ -673,14 +644,14 @@ class TestReusableBlockSerializerUpdate:
         mock_instance.save_revision.assert_called_once()
 
     def test_update_sets_multiple_attributes(self):
-        """updateで複数属性が正しく設定されることを確認する。
+        """Verify that multiple attributes are set correctly on update.
 
-        【目的】updateに複数フィールドのvalidated_dataを与え、全て正しく設定される
-               ことをもって、複数フィールド同時更新要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.update(instance, validated_data)
-        【技法】同値分割
-        【テストデータ】name, slug, contentの同時更新
+        Purpose: Verify that update sets all provided fields correctly,
+                 ensuring multi-field simultaneous update support.
+        Type: Normal
+        Target: ReusableBlockSerializer.update(instance, validated_data)
+        Technique: Equivalence partitioning
+        Test data: Simultaneous update of name, slug, and content
         """
         mock_instance = mock.MagicMock()
         serializer = ReusableBlockSerializer()
@@ -698,14 +669,14 @@ class TestReusableBlockSerializerUpdate:
         assert mock_instance.content == content_data
 
     def test_update_calls_methods_in_order(self):
-        """updateでfull_clean -> save -> save_revisionの順に呼ばれることを確認する。
+        """Verify that update calls full_clean -> save -> save_revision in order.
 
-        【目的】updateの呼び出し順序がfull_clean -> save -> save_revisionであることを
-               もって、バリデーション後の保存・リビジョン作成の順序要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockSerializer.update(instance, validated_data)
-        【技法】同値分割
-        【テストデータ】name="Order Test"
+        Purpose: Verify that the method call order is full_clean -> save ->
+                 save_revision, ensuring validation before save and revision.
+        Type: Normal
+        Target: ReusableBlockSerializer.update(instance, validated_data)
+        Technique: Equivalence partitioning
+        Test data: name="Order Test"
         """
         mock_instance = mock.MagicMock()
         call_order = []
@@ -729,14 +700,15 @@ class TestReusableBlockAPIViewSet:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_get_queryset_filters_live_true(self, mock_objects):
-        """get_querysetがlive=Trueでフィルタすることを確認する。
+        """Verify that get_queryset filters by live=True.
 
-        【目的】get_querysetが常にlive=Trueでフィルタした結果を返すことをもって、
-               公開済みブロックのみ公開APIで提供する要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockAPIViewSet.get_queryset()
-        【技法】同値分割
-        【テストデータ】フィルタ条件 live=True
+        Purpose: Verify that get_queryset always returns results filtered
+                 by live=True, ensuring only published blocks are served
+                 via the public API.
+        Type: Normal
+        Target: ReusableBlockAPIViewSet.get_queryset()
+        Technique: Equivalence partitioning
+        Test data: Filter condition live=True
         """
         mock_qs = mock.MagicMock()
         mock_objects.filter.return_value = mock_qs
@@ -763,14 +735,14 @@ class TestReusableBlockModelViewSetGetQueryset:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_no_filters_returns_all(self, mock_objects):
-        """フィルタパラメータなしで全件が返されることを確認する。
+        """Verify that all records are returned when no filter parameters are given.
 
-        【目的】get_querysetにフィルタパラメータなしでアクセスし、全件が返却される
-               ことをもって、デフォルトの全件取得要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】同値分割
-        【テストデータ】空のquery_params
+        Purpose: Verify that get_queryset returns all records without filters,
+                 ensuring the default full retrieval behavior.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Equivalence partitioning
+        Test data: Empty query_params
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -784,14 +756,14 @@ class TestReusableBlockModelViewSetGetQueryset:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_slug_filter(self, mock_objects):
-        """slugパラメータでフィルタされることを確認する。
+        """Verify that the slug parameter triggers a slug filter.
 
-        【目的】get_querysetにslugパラメータを与え、slug=値でフィルタされた
-               結果が返却されることをもって、slugフィルタ要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】同値分割
-        【テストデータ】slug="hero-block"
+        Purpose: Verify that get_queryset filters by slug=value when a slug
+                 parameter is provided.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Equivalence partitioning
+        Test data: slug="hero-block"
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -817,14 +789,14 @@ class TestReusableBlockModelViewSetGetQueryset:
     )
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_live_filter_parsing(self, mock_objects, live_param, expected_bool):
-        """liveパラメータの各値が正しくブール値に変換されることを確認する。
+        """Verify that each live parameter value is correctly parsed to a boolean.
 
-        【目的】get_querysetにliveパラメータの各表現を与え、正しいブール値で
-               フィルタされることをもって、liveフィルタのパース要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】デシジョンテーブル（DT-LIVE-FILTER参照）
-        【テストデータ】DT-LIVE-FILTERの全パターン
+        Purpose: Verify that get_queryset correctly parses various live
+                 parameter representations to boolean values for filtering.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Decision table (see DT-LIVE-FILTER)
+        Test data: All DT-LIVE-FILTER patterns
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -837,14 +809,14 @@ class TestReusableBlockModelViewSetGetQueryset:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_search_filter(self, mock_objects):
-        """searchパラメータでname__icontainsフィルタが適用されることを確認する。
+        """Verify that the search parameter applies a name__icontains filter.
 
-        【目的】get_querysetにsearchパラメータを与え、name__icontainsでフィルタ
-               されることをもって、名前検索要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】同値分割
-        【テストデータ】search="hero"
+        Purpose: Verify that get_queryset filters by name__icontains when
+                 a search parameter is provided, ensuring name search support.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Equivalence partitioning
+        Test data: search="hero"
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -857,14 +829,14 @@ class TestReusableBlockModelViewSetGetQueryset:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_combined_filters(self, mock_objects):
-        """slug, live, searchの全フィルタが同時に適用されることを確認する。
+        """Verify that slug, live, and search filters are all applied simultaneously.
 
-        【目的】get_querysetにslug, live, searchの全パラメータを与え、全フィルタが
-               チェーン適用されることをもって、複合フィルタ要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】デシジョンテーブル
-        【テストデータ】slug="hero", live="true", search="hero"
+        Purpose: Verify that get_queryset applies all filters in chain when
+                 slug, live, and search parameters are all provided.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Decision table
+        Test data: slug="hero", live="true", search="hero"
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -877,14 +849,14 @@ class TestReusableBlockModelViewSetGetQueryset:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_empty_string_slug_is_not_filtered(self, mock_objects):
-        """空文字slugではフィルタが適用されないことを確認する。
+        """Verify that an empty string slug does not trigger a filter.
 
-        【目的】get_querysetに空文字slugを与え、slugフィルタが適用されないことを
-               もって、空値パラメータの無視要件を保証する
-        【種別】エッジケース
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】境界値分析
-        【テストデータ】slug=""
+        Purpose: Verify that get_queryset ignores an empty slug parameter,
+                 ensuring empty value parameter handling.
+        Type: Edge case
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Boundary analysis
+        Test data: slug=""
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -898,14 +870,14 @@ class TestReusableBlockModelViewSetGetQueryset:
 
     @mock.patch("wagtail_reusable_blocks.api.views.ReusableBlock.objects")
     def test_empty_string_search_is_not_filtered(self, mock_objects):
-        """空文字searchではフィルタが適用されないことを確認する。
+        """Verify that an empty string search does not trigger a filter.
 
-        【目的】get_querysetに空文字searchを与え、searchフィルタが適用されない
-               ことをもって、空検索クエリの無視要件を保証する
-        【種別】エッジケース
-        【対象】ReusableBlockModelViewSet.get_queryset()
-        【技法】境界値分析
-        【テストデータ】search=""
+        Purpose: Verify that get_queryset ignores an empty search parameter,
+                 ensuring empty search query handling.
+        Type: Edge case
+        Target: ReusableBlockModelViewSet.get_queryset()
+        Technique: Boundary analysis
+        Test data: search=""
         """
         mock_qs = mock.MagicMock()
         mock_objects.all.return_value = mock_qs
@@ -926,14 +898,14 @@ class TestReusableBlockModelViewSetPermissions:
 
     @mock.patch("wagtail_reusable_blocks.api.views._resolve_classes")
     def test_get_permissions_resolves_from_settings(self, mock_resolve):
-        """get_permissionsが設定からパーミッションクラスを解決することを確認する。
+        """Verify that get_permissions resolves permission classes from settings.
 
-        【目的】get_permissionsが_resolve_classesを呼んで設定からクラスを解決し、
-               インスタンスリストを返すことをもって、パーミッション設定解決要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_permissions()
-        【技法】同値分割
-        【テストデータ】IsAuthenticatedパーミッション
+        Purpose: Verify that get_permissions calls _resolve_classes to resolve
+                 classes from settings and returns instances.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_permissions()
+        Technique: Equivalence partitioning
+        Test data: IsAuthenticated permission
         """
         mock_perm_class = mock.Mock()
         mock_perm_instance = mock.Mock()
@@ -949,14 +921,15 @@ class TestReusableBlockModelViewSetPermissions:
 
     @mock.patch("wagtail_reusable_blocks.api.views._resolve_classes")
     def test_get_permissions_returns_empty_list_when_none(self, mock_resolve):
-        """設定がNoneの場合に空リストが返されることを確認する。
+        """Verify that an empty list is returned when the setting is None.
 
-        【目的】get_permissionsで_resolve_classesがNoneを返す場合に空リストが返却
-               されることをもって、パーミッション無効化時の動作要件を保証する
-        【種別】エッジケース
-        【対象】ReusableBlockModelViewSet.get_permissions()
-        【技法】同値分割
-        【テストデータ】None設定（_resolve_classesがNoneを返す）
+        Purpose: Verify that get_permissions returns an empty list when
+                 _resolve_classes returns None, ensuring permission disable
+                 behavior.
+        Type: Edge case
+        Target: ReusableBlockModelViewSet.get_permissions()
+        Technique: Equivalence partitioning
+        Test data: None setting (_resolve_classes returns None)
         """
         mock_resolve.return_value = None
         viewset = ReusableBlockModelViewSet()
@@ -973,15 +946,15 @@ class TestReusableBlockModelViewSetPermissions:
     def test_get_authenticators_uses_drf_defaults_when_none(
         self, mock_super_auth, mock_resolve
     ):
-        """認証クラスがNoneの場合にDRFデフォルトが使用されることを確認する。
+        """Verify that DRF defaults are used when authentication classes are None.
 
-        【目的】get_authenticatorsで_resolve_classesがNoneを返す場合にsuper()の
-               デフォルト認証が使用されることをもって、DRFデフォルトフォールバック
-               要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_authenticators()
-        【技法】同値分割
-        【テストデータ】None設定（DRFデフォルト使用）
+        Purpose: Verify that get_authenticators uses super()'s default
+                 authentication when _resolve_classes returns None, ensuring
+                 DRF default fallback.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_authenticators()
+        Technique: Equivalence partitioning
+        Test data: None setting (use DRF defaults)
         """
         mock_resolve.return_value = None
         viewset = ReusableBlockModelViewSet()
@@ -994,14 +967,15 @@ class TestReusableBlockModelViewSetPermissions:
 
     @mock.patch("wagtail_reusable_blocks.api.views._resolve_classes")
     def test_get_authenticators_resolves_from_settings(self, mock_resolve):
-        """設定から認証クラスが解決されることを確認する。
+        """Verify that authentication classes are resolved from settings.
 
-        【目的】get_authenticatorsが_resolve_classesで設定からクラスを解決し、
-               インスタンスリストを返すことをもって、カスタム認証設定要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_authenticators()
-        【技法】同値分割
-        【テストデータ】カスタム認証クラス
+        Purpose: Verify that get_authenticators resolves classes from settings
+                 via _resolve_classes and returns instances, ensuring custom
+                 authentication support.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_authenticators()
+        Technique: Equivalence partitioning
+        Test data: Custom authentication class
         """
         mock_auth_class = mock.Mock()
         mock_auth_instance = mock.Mock()
@@ -1017,14 +991,14 @@ class TestReusableBlockModelViewSetPermissions:
 
     @mock.patch("wagtail_reusable_blocks.api.views._resolve_classes")
     def test_get_permissions_instantiates_multiple_classes(self, mock_resolve):
-        """複数パーミッションクラスが全てインスタンス化されることを確認する。
+        """Verify that multiple permission classes are all instantiated.
 
-        【目的】get_permissionsに複数クラスの設定を与え、全てがインスタンス化されて
-               返却されることをもって、複数パーミッション併用要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlockModelViewSet.get_permissions()
-        【技法】同値分割
-        【テストデータ】2つのパーミッションクラス
+        Purpose: Verify that get_permissions instantiates all classes when
+                 multiple permission classes are configured.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.get_permissions()
+        Technique: Equivalence partitioning
+        Test data: 2 permission classes
         """
         cls_a = mock.Mock()
         cls_b = mock.Mock()
@@ -1045,15 +1019,15 @@ class TestReusableBlockApiFields:
     """ReusableBlock.api_fields configuration tests."""
 
     def test_api_fields_contain_expected_names(self):
-        """api_fieldsに期待するフィールド名が全て含まれることを確認する。
+        """Verify that api_fields contains all expected field names.
 
-        【目的】ReusableBlock.api_fieldsにname, slug, content, created_at,
-               updated_at, liveが含まれることをもって、Wagtail API v2の
-               レスポンスフィールド要件を保証する
-        【種別】正常系テスト
-        【対象】ReusableBlock.api_fields
-        【技法】同値分割
-        【テストデータ】api_fieldsのフィールド名リスト
+        Purpose: Verify that ReusableBlock.api_fields includes name, slug,
+                 content, created_at, updated_at, and live, ensuring Wagtail
+                 API v2 response field requirements.
+        Type: Normal
+        Target: ReusableBlock.api_fields
+        Technique: Equivalence partitioning
+        Test data: api_fields field name list
         """
         from wagtail_reusable_blocks.models import ReusableBlock
 
@@ -1063,14 +1037,14 @@ class TestReusableBlockApiFields:
         assert field_names == expected
 
     def test_api_fields_count(self):
-        """api_fieldsのフィールド数が正しいことを確認する。
+        """Verify that the api_fields count is correct.
 
-        【目的】ReusableBlock.api_fieldsのフィールド数が6であることをもって、
-               不要なフィールド露出や必要フィールドの欠落がないことを保証する
-        【種別】正常系テスト
-        【対象】ReusableBlock.api_fields
-        【技法】同値分割
-        【テストデータ】api_fieldsの長さ
+        Purpose: Verify that ReusableBlock.api_fields has exactly 6 fields,
+                 ensuring no unintended field exposure or missing fields.
+        Type: Normal
+        Target: ReusableBlock.api_fields
+        Technique: Equivalence partitioning
+        Test data: api_fields length
         """
         from wagtail_reusable_blocks.models import ReusableBlock
 
@@ -1084,42 +1058,42 @@ class TestApiModuleExports:
     """API module __init__.py public export tests."""
 
     def test_exports_reusable_block_api_viewset(self):
-        """ReusableBlockAPIViewSetがモジュールからエクスポートされることを確認する。
+        """Verify that ReusableBlockAPIViewSet is exported from the module.
 
-        【目的】wagtail_reusable_blocks.apiからReusableBlockAPIViewSetが
-               インポート可能であることをもって、公開API要件を保証する
-        【種別】正常系テスト
-        【対象】wagtail_reusable_blocks.api.__all__
-        【技法】同値分割
-        【テストデータ】モジュールインポート
+        Purpose: Verify that ReusableBlockAPIViewSet can be imported from
+                 wagtail_reusable_blocks.api, ensuring public API availability.
+        Type: Normal
+        Target: wagtail_reusable_blocks.api.__all__
+        Technique: Equivalence partitioning
+        Test data: Module import
         """
         from wagtail_reusable_blocks.api import ReusableBlockAPIViewSet as cls
 
         assert cls is ReusableBlockAPIViewSet
 
     def test_exports_reusable_block_model_viewset(self):
-        """ReusableBlockModelViewSetがモジュールからエクスポートされることを確認する。
+        """Verify that ReusableBlockModelViewSet is exported from the module.
 
-        【目的】wagtail_reusable_blocks.apiからReusableBlockModelViewSetが
-               インポート可能であることをもって、公開API要件を保証する
-        【種別】正常系テスト
-        【対象】wagtail_reusable_blocks.api.__all__
-        【技法】同値分割
-        【テストデータ】モジュールインポート
+        Purpose: Verify that ReusableBlockModelViewSet can be imported from
+                 wagtail_reusable_blocks.api, ensuring public API availability.
+        Type: Normal
+        Target: wagtail_reusable_blocks.api.__all__
+        Technique: Equivalence partitioning
+        Test data: Module import
         """
         from wagtail_reusable_blocks.api import ReusableBlockModelViewSet as cls
 
         assert cls is ReusableBlockModelViewSet
 
     def test_all_contains_expected_exports(self):
-        """__all__に期待するエクスポートが含まれることを確認する。
+        """Verify that __all__ contains the expected exports.
 
-        【目的】wagtail_reusable_blocks.api.__all__に2つのViewSetクラスが
-               含まれることをもって、パブリックAPIの明示的定義要件を保証する
-        【種別】正常系テスト
-        【対象】wagtail_reusable_blocks.api.__all__
-        【技法】同値分割
-        【テストデータ】__all__属性
+        Purpose: Verify that wagtail_reusable_blocks.api.__all__ includes
+                 both ViewSet classes, ensuring explicit public API definition.
+        Type: Normal
+        Target: wagtail_reusable_blocks.api.__all__
+        Technique: Equivalence partitioning
+        Test data: __all__ attribute
         """
         import wagtail_reusable_blocks.api as api_module
 

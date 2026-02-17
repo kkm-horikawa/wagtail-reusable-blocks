@@ -72,30 +72,30 @@ def test_api_created_blocks_render_in_admin(
 ):
     """API-created rich_text and raw_html blocks render correctly in admin preview.
 
-    【目的】DRF API経由で作成されたReusableBlock（rich_text/raw_html）が
-           Wagtail管理画面のスニペット一覧に表示され、編集画面のプレビューで
-           コンテンツが壊れずにレンダリングされることを検証する。
-           headless CMSユースケースにおけるエンドツーエンド要件を保証する。
-    【種別】正常系
-    【技法】クリティカルパス、ユーザージャーニー
-    【ユーザーフロー】API作成 -> 管理画面ログイン -> 一覧確認 -> 編集画面プレビュー
-    【前提条件】
-    - Django live_server が起動している
-    - DRF CRUD エンドポイントが /api/reusable-blocks/ で利用可能
-    【テストデータ】
-    - rich_text を含む ReusableBlock (API経由で作成)
-    - raw_html を含む ReusableBlock (API経由で作成)
-    【操作手順】
-    1. DRF API経由で rich_text ブロックを作成
-    2. DRF API経由で raw_html ブロックを作成
-    3. Wagtail admin にログイン済みの状態で Snippets 一覧にアクセス
-    4. 作成した2つのブロックが一覧に表示されることを確認
-    5. rich_text ブロックの編集画面を開き、Preview でコンテンツを確認
-    6. raw_html ブロックの編集画面を開き、Preview でコンテンツを確認
-    【期待結果】
-    - 一覧に両ブロックが表示される
-    - rich_text プレビューに段落テキストが表示される
-    - raw_html プレビューにカスタムHTMLが表示される
+    Purpose: Verify that ReusableBlocks created via the DRF API (rich_text
+             and raw_html) appear in the Wagtail admin snippet listing and
+             render correctly in the edit view preview, ensuring the end-to-end
+             headless CMS use case.
+    Type: Normal
+    Technique: Critical path, user journey
+    User flow: API creation -> Admin login -> Listing check -> Edit view preview
+    Prerequisites:
+    - Django live_server is running
+    - DRF CRUD endpoint is available at /api/reusable-blocks/
+    Test data:
+    - ReusableBlock with rich_text (created via API)
+    - ReusableBlock with raw_html (created via API)
+    Steps:
+    1. Create a rich_text block via DRF API
+    2. Create a raw_html block via DRF API
+    3. Navigate to the snippet listing page while logged in to Wagtail admin
+    4. Verify both blocks appear in the listing
+    5. Open the rich_text block edit page and check the preview content
+    6. Open the raw_html block edit page and check the preview content
+    Expected results:
+    - Both blocks appear in the listing
+    - rich_text preview shows the paragraph text
+    - raw_html preview shows the custom HTML
     """
     page = authenticated_page
     base_url = live_server.url
