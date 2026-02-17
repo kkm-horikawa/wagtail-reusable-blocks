@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "taggit",
+    # Third-party
+    "rest_framework",
     # Our app
     "wagtail_reusable_blocks",
 ]
