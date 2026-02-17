@@ -656,3 +656,51 @@ class TestDRFFilterEndpoints:
         assert len(data) == 2
         names = {item["name"] for item in data}
         assert names == {"Header Block", "Main Header"}
+
+
+class TestDRFCircularReferenceValidation:
+    """DRF CRUD circular reference validation tests."""
+
+    @pytest.mark.django_db
+    def test_self_referencing_block_returns_400(self, api_client, admin_user):
+        """PUT /api/reusable-blocks/<id>/ returns 400 when block references itself.
+
+        Purpose: Verify that updating a block's content to reference itself
+                 via reusable_block type triggers a validation error (400),
+                 ensuring circular reference protection at the API level.
+        Type: Error
+        Technique: API endpoint
+        Integration: PUT /api/reusable-blocks/<id>/ -> ReusableBlockSerializer -> full_clean -> 400
+        Test data:
+        - Admin user
+        - Existing block that attempts self-reference
+        Scenario:
+        1. Create a block via POST
+        2. PUT to update the block's content with a reusable_block referencing itself
+        3. Verify response is 400
+        """
+        api_client.force_login(admin_user)
+
+        create_response = api_client.post(
+            "/api/reusable-blocks/",
+            data={
+                "name": "Self Ref Block",
+                "slug": "self-ref-block",
+                "content": [{"type": "rich_text", "value": "<p>initial</p>"}],
+            },
+            content_type="application/json",
+        )
+        assert create_response.status_code == 201
+        block_id = create_response.json()["id"]
+
+        response = api_client.put(
+            f"/api/reusable-blocks/{block_id}/",
+            data={
+                "name": "Self Ref Block",
+                "slug": "self-ref-block",
+                "content": [{"type": "reusable_block", "value": block_id}],
+            },
+            content_type="application/json",
+        )
+
+        assert response.status_code == 400

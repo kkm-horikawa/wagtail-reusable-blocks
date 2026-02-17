@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.text import slugify
 from rest_framework import fields as drf_fields
 from rest_framework import serializers
@@ -96,7 +97,7 @@ class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[misc
     def create(self, validated_data: dict[str, Any]) -> ReusableBlock:
         """Create a new ReusableBlock and save an initial revision."""
         instance = ReusableBlock(**validated_data)
-        instance.full_clean()
+        self._run_full_clean(instance)
         instance.save()
         instance.save_revision()
         return instance
@@ -107,7 +108,15 @@ class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[misc
         """Update a ReusableBlock and save a revision."""
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        instance.full_clean()
+        self._run_full_clean(instance)
         instance.save()
         instance.save_revision()
         return instance
+
+    @staticmethod
+    def _run_full_clean(instance: ReusableBlock) -> None:
+        """Run full_clean and convert Django ValidationError to DRF ValidationError."""
+        try:
+            instance.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from exc
