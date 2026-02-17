@@ -3,12 +3,38 @@
 from typing import Any
 
 from django.utils.text import slugify
+from rest_framework import fields as drf_fields
 from rest_framework import serializers
 
 from wagtail_reusable_blocks.models import ReusableBlock
 
 
-class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+class StreamFieldField(drf_fields.Field):  # type: ignore[misc]
+    """Custom DRF field for Wagtail StreamField serialization.
+
+    Converts StreamValue to JSON-serializable list on read,
+    and accepts JSON list on write.
+    """
+
+    def to_representation(self, value: Any) -> list[Any]:
+        """Convert StreamValue to a JSON-serializable list."""
+        if not value:
+            return []
+        request = self.context.get("request")
+        return value.stream_block.get_api_representation(value, request)  # type: ignore[no-any-return]
+
+    def to_internal_value(self, data: Any) -> list[Any]:
+        """Accept a JSON list of stream blocks."""
+        if data is None:
+            return []
+        if not isinstance(data, list):
+            raise serializers.ValidationError(
+                "Content must be a list of stream blocks."
+            )
+        return data
+
+
+class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[misc]
     """Serializer for ReusableBlock model with StreamField support.
 
     Handles:
@@ -18,7 +44,7 @@ class ReusableBlockSerializer(serializers.ModelSerializer):  # type: ignore[type
     - Revision creation on save
     """
 
-    content = serializers.JSONField(required=False, default=list)  # type: ignore[arg-type]
+    content = StreamFieldField(required=False, default=list)
 
     class Meta:
         model = ReusableBlock

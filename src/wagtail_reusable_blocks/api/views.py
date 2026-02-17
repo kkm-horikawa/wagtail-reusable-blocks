@@ -75,7 +75,7 @@ class ReusableBlockAPIViewSet(BaseAPIViewSet):  # type: ignore[misc]
         return ReusableBlock.objects.filter(live=True)
 
 
-class ReusableBlockModelViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
+class ReusableBlockModelViewSet(viewsets.ModelViewSet):  # type: ignore[misc]
     """Full CRUD API endpoint for ReusableBlock (DRF-based).
 
     Provides:
@@ -110,7 +110,7 @@ class ReusableBlockModelViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg
         """Get authentication classes from settings, or use DRF defaults."""
         classes = _resolve_classes("API_AUTHENTICATION_CLASSES")
         if classes is None:
-            return super().get_authenticators()
+            return super().get_authenticators()  # type: ignore[no-any-return]
         return [cls() for cls in classes]
 
     def get_queryset(self) -> Any:
