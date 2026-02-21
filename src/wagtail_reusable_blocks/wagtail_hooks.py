@@ -1,9 +1,10 @@
 """Wagtail admin UI customizations for ReusableBlock."""
 
+import json
 from typing import TYPE_CHECKING
 
 from django.urls import include, path, reverse
-from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
@@ -104,14 +105,9 @@ def inject_reusable_blocks_config() -> str:
     slots_url_template = reverse(
         "wagtail_reusable_blocks:block_slots",
         kwargs={"block_id": BLOCK_ID_PLACEHOLDER_INT},
-    ).replace(f"/{BLOCK_ID_PLACEHOLDER_INT}/", f"/{BLOCK_ID_PLACEHOLDER}/")
-    return format_html(
-        "<script>"
-        "window.wagtailReusableBlocksConfig="
-        '{{"slotsUrlTemplate":"{}"}};'
-        "</script>",
-        slots_url_template,
-    )
+    ).replace(f"/{BLOCK_ID_PLACEHOLDER_INT}/", f"/{BLOCK_ID_PLACEHOLDER}/", 1)
+    config = json.dumps({"slotsUrlTemplate": slots_url_template})
+    return mark_safe(f"<script>window.wagtailReusableBlocksConfig={config};</script>")  # noqa: S308
 
 
 @hooks.register("register_admin_urls")  # type: ignore[untyped-decorator]

@@ -95,8 +95,11 @@ class SlotChooserWidget {
         }
 
         try {
-            const slotsUrl = window.wagtailReusableBlocksConfig?.slotsUrlTemplate?.replace('__BLOCK_ID__', blockId)
-                || `/admin/reusable-blocks/blocks/${blockId}/slots/`;
+            if (!window.wagtailReusableBlocksConfig?.slotsUrlTemplate) {
+                console.error('[wagtail-reusable-blocks] slotsUrlTemplate not found.');
+                return;
+            }
+            const slotsUrl = window.wagtailReusableBlocksConfig.slotsUrlTemplate.replace('__BLOCK_ID__', blockId);
             const response = await fetch(slotsUrl);
 
             if (!response.ok) {
