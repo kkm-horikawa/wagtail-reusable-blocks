@@ -141,7 +141,6 @@ class TestLanguageSwitching:
         expected_strings = [
             "Reusable Block",
             "Reusable Blocks",
-            "Clear Cache",
             "Maximum nesting depth exceeded",
             "name",
             "slug",

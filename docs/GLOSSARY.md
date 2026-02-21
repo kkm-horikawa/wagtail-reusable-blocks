@@ -154,8 +154,6 @@ SnippetChooserBlock        →    ReusableBlockChooserBlock (extends)
 ```python
 WAGTAIL_REUSABLE_BLOCKS = {
     'BLOCK_TYPES': [...],        # Allowed blocks in ReusableBlock.content
-    'CACHE_ENABLED': True,       # Enable caching (v0.3.0)
-    'CACHE_TIMEOUT': 3600,       # Cache TTL in seconds
     'MAX_NESTING_DEPTH': 5,      # Prevent deep nesting
     'TRACK_USAGE': True,         # Enable usage tracking (v0.3.0)
 }
@@ -194,4 +192,4 @@ Detected and prevented at save time with clear error message.
 |---------|----------|-------|
 | v0.1.0 | MVP | Basic reusable blocks |
 | v0.2.0 | Slots | Slot-based templating |
-| v0.3.0 | Polish | Performance, caching, usage tracking |
+| v0.3.0 | Polish | Performance, usage tracking |

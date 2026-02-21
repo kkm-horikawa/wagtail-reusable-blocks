@@ -129,16 +129,3 @@ msgid ""
 "'%(ref_name)s' which creates a cycle. %(error)s"
 msgstr ""
 "Körkörös hivatkozás észlelve: a '%(name)s' blokk a '%(ref_name)s' blokkra hivatkozik, ami ciklust hoz létre. %(error)s"
-
-#: views/cache.py:41
-#, python-format
-msgid "Cache cleared for '%(name)s'."
-msgstr "'%(name)s' gyorsítótára törölve lett."
-
-#: views/cache.py:75
-msgid "All ReusableBlock cache entries have been cleared."
-msgstr "Minden ÚjrahasznosíthatóBlokk gyorsítótár-bejegyzés törölve lett."
-
-#: wagtail_hooks.py:133
-msgid "Clear Cache"
-msgstr "Gyorsítótár törlése"

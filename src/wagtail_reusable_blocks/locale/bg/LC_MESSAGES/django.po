@@ -125,16 +125,3 @@ msgid ""
 "Circular reference detected: Block '%(name)s' references block "
 "'%(ref_name)s' which creates a cycle. %(error)s"
 msgstr "Циклична зависимост: '%(name)s' се позовава на '%(ref_name)s', създавайки цикъл. %(error)s"
-
-#: views/cache.py:41
-#, python-format
-msgid "Cache cleared for '%(name)s'."
-msgstr "Кешът на '%(name)s' е изчистен"
-
-#: views/cache.py:75
-msgid "All ReusableBlock cache entries have been cleared."
-msgstr "Всички кеш записи за многократно използваемите блокове бяха изчистени."
-
-#: wagtail_hooks.py:133
-msgid "Clear Cache"
-msgstr "Изчисти кеша"
