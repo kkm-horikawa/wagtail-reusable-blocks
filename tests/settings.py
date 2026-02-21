@@ -110,7 +110,7 @@ WAGTAIL_SITE_NAME = "Test Site"
 # This is required for Wagtail 3.0+
 USE_JSON_FIELD = True
 
-# Cache settings for testing - use dummy cache to avoid test pollution
+# Use dummy cache backend for testing
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.dummy.DummyCache",
@@ -123,9 +123,4 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ],
-}
-
-# Disable caching in tests by default
-WAGTAIL_REUSABLE_BLOCKS = {
-    "CACHE_ENABLED": False,
 }

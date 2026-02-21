@@ -131,16 +131,3 @@ msgid ""
 msgstr ""
 "Référence circulaire détectée : le bloc '%(name)s' référence le bloc "
 "'%(ref_name)s' ce qui crée un cycle. %(error)s"
-
-#: views/cache.py:41
-#, python-format
-msgid "Cache cleared for '%(name)s'."
-msgstr "Cache vidé pour '%(name)s'."
-
-#: views/cache.py:75
-msgid "All ReusableBlock cache entries have been cleared."
-msgstr "Toutes les entrées de cache des blocs réutilisables ont été vidées."
-
-#: wagtail_hooks.py:133
-msgid "Clear Cache"
-msgstr "Vider le cache"

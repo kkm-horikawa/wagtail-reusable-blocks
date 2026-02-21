@@ -125,16 +125,3 @@ msgid ""
 "Circular reference detected: Block '%(name)s' references block "
 "'%(ref_name)s' which creates a cycle. %(error)s"
 msgstr ""
-
-#: views/cache.py:41
-#, python-format
-msgid "Cache cleared for '%(name)s'."
-msgstr ""
-
-#: views/cache.py:75
-msgid "All ReusableBlock cache entries have been cleared."
-msgstr ""
-
-#: wagtail_hooks.py:133
-msgid "Clear Cache"
-msgstr ""

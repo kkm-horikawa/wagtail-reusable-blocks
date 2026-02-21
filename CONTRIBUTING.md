@@ -857,10 +857,10 @@ msgid "Original English text"
 msgstr "Translated text"
 
 # For strings with placeholders
-#: views/cache.py:41
+#: wagtail_hooks.py:56
 #, python-format
-msgid "Cache cleared for '%(name)s'."
-msgstr "「%(name)s」のキャッシュをクリアしました。"
+msgid "Reusable block '%(name)s' deleted."
+msgstr "「%(name)s」を削除しました。"
 ```
 
 ### Supported Languages
@@ -906,7 +906,7 @@ name = models.CharField(_("Name"), max_length=255)
 
 # Use gettext for runtime strings
 from django.utils.translation import gettext
-messages.success(request, gettext("Cache cleared."))
+messages.success(request, gettext("Block saved successfully."))
 ```
 
 ```html

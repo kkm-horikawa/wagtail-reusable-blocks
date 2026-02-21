@@ -4,40 +4,30 @@ wagtail-reusable-blocks is designed for high performance. This guide covers benc
 
 ## Benchmark Results
 
-Performance benchmarks from v0.3.0 (measured on typical development hardware):
+Performance benchmarks (measured on typical development hardware):
 
 ### Rendering Performance
 
 | Operation | Time | Target |
 |-----------|------|--------|
-| Single block render (cached) | ~16μs | < 5ms |
-| Single block render (uncached) | ~16μs | < 5ms |
-| 10 blocks render (cached) | ~160μs | < 50ms |
-| 10 blocks render (uncached) | ~158μs | < 50ms |
-
-### Cache Operations
-
-| Operation | Time |
-|-----------|------|
-| Cache hit | ~3μs |
-| Cache set | ~4μs |
-| Cache invalidate | ~6μs |
+| Single block render | ~16us | < 5ms |
+| 10 blocks render | ~160us | < 50ms |
 
 ### Database Queries
 
 | Operation | Time |
 |-----------|------|
-| Fetch single block | ~130μs |
+| Fetch single block | ~130us |
 | Fetch 100 blocks | ~1.4ms |
-| Search blocks | ~320μs |
+| Search blocks | ~320us |
 
 ### Admin Operations
 
 | Operation | Time |
 |-----------|------|
-| List with ordering | ~780μs |
-| List with search | ~860μs |
-| List with date filter | ~830μs |
+| List with ordering | ~780us |
+| List with search | ~860us |
+| List with date filter | ~830us |
 
 ## N+1 Query Prevention
 
@@ -66,31 +56,7 @@ print(f"Queries: {len(connection.queries)}")
 
 ## Optimization Strategies
 
-### 1. Enable Caching (Recommended)
-
-For production, enable caching:
-
-```python
-WAGTAIL_REUSABLE_BLOCKS = {
-    'CACHE_ENABLED': True,
-    'CACHE_TIMEOUT': 3600,
-}
-```
-
-### 2. Use an Efficient Cache Backend
-
-Redis is recommended for production:
-
-```python
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
-    }
-}
-```
-
-### 3. Optimize Template Rendering
+### 1. Optimize Template Rendering
 
 If using custom templates, keep them simple:
 
@@ -107,7 +73,7 @@ If using custom templates, keep them simple:
 </div>
 ```
 
-### 4. Limit Nesting Depth
+### 2. Limit Nesting Depth
 
 Deep nesting impacts performance:
 
@@ -117,7 +83,7 @@ WAGTAIL_REUSABLE_BLOCKS = {
 }
 ```
 
-### 5. Prefetch Related Data
+### 3. Prefetch Related Data
 
 When querying multiple blocks:
 
@@ -133,6 +99,20 @@ blocks = ReusableBlock.objects.all()
 for block in blocks:
     print(block.locked_by)  # N+1 query!
 ```
+
+### 4. Use Django's Built-in Caching
+
+For caching rendered blocks, use Django's standard caching mechanisms:
+
+```python
+# Template fragment caching
+{% load cache %}
+{% cache 3600 reusable_block block.pk %}
+    {% include_block block %}
+{% endcache %}
+```
+
+Or use Django's cache middleware for full-page caching.
 
 ## Running Benchmarks
 
@@ -159,7 +139,6 @@ pytest tests/test_benchmarks.py --benchmark-compare
 
 - `rendering` - Block rendering performance
 - `queries` - Database query performance
-- `cache` - Cache operation performance
 - `admin` - Admin UI query performance
 
 ## Monitoring in Production
@@ -198,7 +177,7 @@ wagtail-reusable-blocks aims to meet these targets:
 
 | Metric | Target | Notes |
 |--------|--------|-------|
-| Single block render (cached) | < 5ms | Including cache lookup |
+| Single block render | < 5ms | Direct rendering |
 | Page with 10 blocks | < 50ms | Additional overhead |
 | Admin list (1000 blocks) | < 500ms | With pagination |
 | N+1 queries | 0 | All operations |
@@ -207,25 +186,13 @@ wagtail-reusable-blocks aims to meet these targets:
 
 ### Slow Rendering
 
-1. Check if caching is enabled
-2. Review template complexity
-3. Check nesting depth
-4. Profile with Django Debug Toolbar
+1. Review template complexity
+2. Check nesting depth
+3. Profile with Django Debug Toolbar
+4. Consider Django's template fragment caching
 
 ### High Query Count
 
 1. Check for N+1 patterns
 2. Use `select_related()` / `prefetch_related()`
 3. Review admin customizations
-
-### Cache Misses
-
-1. Verify cache backend is running
-2. Check `CACHE_TIMEOUT` setting
-3. Monitor cache hit rate
-
-### Memory Issues
-
-1. Reduce `CACHE_TIMEOUT`
-2. Use Redis instead of local memory
-3. Monitor cache size

@@ -208,7 +208,6 @@ flowchart TD
 - Slot detection: O(n) where n = number of HTML elements
 - Rendering: O(m) where m = number of filled slots
 - No database queries during slot filling (all data pre-loaded)
-- Future optimization: Cache rendered HTML (v0.3.0)
 
 ### Circular Reference Detection (v0.1.0 + v0.2.0)
 
@@ -307,7 +306,6 @@ INSTALLED_APPS = ['wagtail_reusable_blocks']
 # Full customization available
 WAGTAIL_REUSABLE_BLOCKS = {
     'BLOCK_TYPES': [...],      # Custom block types
-    'CACHE_ENABLED': True,     # Performance
     'MAX_NESTING_DEPTH': 5,    # Safety limit
 }
 ```
@@ -320,16 +318,9 @@ flowchart LR
         P1["1 query per block"]
         P1 --> P1R["Simple, acceptable"]
     end
-
-    subgraph v030["v0.3.0"]
-        P2["Caching layer"]
-        P3["Bulk queries"]
-        P4["Usage tracking"]
-        P2 --> P2R["Render once, cache"]
-        P3 --> P3R["Single query for all"]
-        P4 --> P4R["Smart invalidation"]
-    end
 ```
+
+For caching, rely on Django's standard caching middleware or template fragment caching.
 
 ## Future Considerations (Not in Scope)
 
