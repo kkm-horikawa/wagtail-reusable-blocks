@@ -192,4 +192,4 @@ Detected and prevented at save time with clear error message.
 |---------|----------|-------|
 | v0.1.0 | MVP | Basic reusable blocks |
 | v0.2.0 | Slots | Slot-based templating |
-| v0.3.0 | Polish | Performance, caching, usage tracking |
+| v0.3.0 | Polish | Performance, usage tracking |
