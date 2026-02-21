@@ -501,10 +501,6 @@ WAGTAIL_REUSABLE_BLOCKS = {
     'SLOT_LABEL_ATTRIBUTE': 'data-slot-label',
     'RENDER_TIMEOUT': 5,
 
-    # v0.3.0 settings
-    'CACHE_ENABLED': True,
-    'CACHE_TIMEOUT': 3600,  # 1 hour
-    'CACHE_KEY_PREFIX': 'reusable_block',
 }
 ```
 
@@ -518,9 +514,6 @@ WAGTAIL_REUSABLE_BLOCKS = {
 | `SLOT_ATTRIBUTE` | `'data-slot'` | HTML attribute for slot detection | v0.2.0+ |
 | `SLOT_LABEL_ATTRIBUTE` | `'data-slot-label'` | Optional label attribute for slots | v0.2.0+ |
 | `RENDER_TIMEOUT` | `5` | Maximum render time in seconds | v0.2.0+ |
-| `CACHE_ENABLED` | `False` | Enable caching for rendered blocks | v0.3.0+ |
-| `CACHE_TIMEOUT` | `3600` | Cache TTL in seconds (1 hour default) | v0.3.0+ |
-| `CACHE_KEY_PREFIX` | `'reusable_block'` | Prefix for cache keys | v0.3.0+ |
 | `API_PERMISSION_CLASSES` | `['rest_framework.permissions.IsAuthenticated']` | Permission classes for DRF CRUD ViewSet | v0.8.0+ |
 | `API_AUTHENTICATION_CLASSES` | `None` | Authentication classes for DRF CRUD ViewSet (`None` uses DRF defaults) | v0.8.0+ |
 | `API_FILTER_FIELDS` | `['slug', 'live']` | Fields available for filtering | v0.8.0+ |
@@ -685,7 +678,6 @@ See our [CI configuration](.github/workflows/ci.yml) for the complete compatibil
 
 - [Architecture & Design Decisions](docs/ARCHITECTURE.md)
 - [Glossary of Terms](docs/GLOSSARY.md)
-- [Caching Guide](docs/CACHING.md) (v0.3.0+)
 - [Revisions & Workflows](docs/REVISIONS.md) (v0.3.0+)
 - [Performance Guide](docs/PERFORMANCE.md) (v0.3.0+)
 - [REST API Guide](docs/API.md) (v0.8.0+)
