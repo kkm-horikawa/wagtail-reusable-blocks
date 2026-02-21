@@ -1,7 +1,7 @@
 """Performance benchmark tests for wagtail-reusable-blocks.
 
 These tests measure performance against defined targets:
-- Single ReusableBlock rendering (cached): < 5ms
+- Single ReusableBlock rendering: < 5ms
 - Page with 10 ReusableBlocks: < 50ms additional overhead
 - Admin list with 1000 blocks: < 500ms
 - N+1 queries: Zero
@@ -12,9 +12,7 @@ Run benchmarks with:
 
 import pytest
 from django.db import connection, reset_queries
-from django.test.utils import override_settings
 
-from wagtail_reusable_blocks.cache import ReusableBlockCache
 from wagtail_reusable_blocks.models import ReusableBlock
 
 
@@ -83,9 +81,11 @@ class TestRenderingBenchmarks:
     """Benchmark tests for block rendering performance."""
 
     @pytest.mark.benchmark(group="rendering")
-    def test_single_block_render_uncached(self, benchmark, simple_block, settings):
-        """Benchmark single block rendering without cache."""
-        settings.WAGTAIL_REUSABLE_BLOCKS = {"CACHE_ENABLED": False}
+    def test_single_block_render(self, benchmark, simple_block):
+        """Benchmark single block rendering.
+
+        Target: < 5ms
+        """
 
         def render_block():
             return simple_block.render()
@@ -95,62 +95,11 @@ class TestRenderingBenchmarks:
         assert len(result) > 0
 
     @pytest.mark.benchmark(group="rendering")
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            }
-        }
-    )
-    def test_single_block_render_cached(self, benchmark, simple_block, settings):
-        """Benchmark single block rendering with cache.
-
-        Target: < 5ms
-        """
-        settings.WAGTAIL_REUSABLE_BLOCKS = {"CACHE_ENABLED": True}
-
-        # Pre-warm cache
-        simple_block.render()
-
-        def render_block():
-            return simple_block.render()
-
-        result = benchmark(render_block)
-        assert result is not None
-        # Performance target verified by benchmark output (< 5ms)
-
-    @pytest.mark.benchmark(group="rendering")
-    def test_10_blocks_render_uncached(self, benchmark, blocks_10, settings):
-        """Benchmark rendering 10 blocks without cache."""
-        settings.WAGTAIL_REUSABLE_BLOCKS = {"CACHE_ENABLED": False}
-
-        def render_blocks():
-            results = []
-            for block in blocks_10:
-                results.append(block.render())
-            return results
-
-        result = benchmark(render_blocks)
-        assert len(result) == 10
-
-    @pytest.mark.benchmark(group="rendering")
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            }
-        }
-    )
-    def test_10_blocks_render_cached(self, benchmark, blocks_10, settings):
-        """Benchmark rendering 10 blocks with cache.
+    def test_10_blocks_render(self, benchmark, blocks_10):
+        """Benchmark rendering 10 blocks.
 
         Target: < 50ms additional overhead
         """
-        settings.WAGTAIL_REUSABLE_BLOCKS = {"CACHE_ENABLED": True}
-
-        # Pre-warm cache
-        for block in blocks_10:
-            block.render()
 
         def render_blocks():
             results = []
@@ -160,7 +109,6 @@ class TestRenderingBenchmarks:
 
         result = benchmark(render_blocks)
         assert len(result) == 10
-        # Performance target verified by benchmark output (< 50ms)
 
 
 class TestQueryBenchmarks:
@@ -208,10 +156,8 @@ class TestNPlusOneQueries:
         yield
         settings.DEBUG = False
 
-    def test_render_multiple_blocks_no_n_plus_one(self, blocks_10, settings):
+    def test_render_multiple_blocks_no_n_plus_one(self, blocks_10):
         """Verify rendering multiple blocks doesn't cause N+1 queries."""
-        settings.WAGTAIL_REUSABLE_BLOCKS = {"CACHE_ENABLED": False}
-
         reset_queries()
 
         # Render all blocks
@@ -250,73 +196,6 @@ class TestNPlusOneQueries:
 
         # Verify we got the blocks
         assert len(blocks) == 100
-
-
-class TestCacheBenchmarks:
-    """Benchmark tests for cache operations."""
-
-    @pytest.fixture
-    def cache(self):
-        """Get cache instance."""
-        return ReusableBlockCache()
-
-    @pytest.mark.benchmark(group="cache")
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            }
-        },
-        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
-    )
-    def test_cache_get_hit(self, benchmark, cache, simple_block):
-        """Benchmark cache hit performance."""
-        # Pre-populate cache
-        cache.set(simple_block.pk, "<p>Cached content</p>")
-
-        def cache_get():
-            return cache.get(simple_block.pk)
-
-        result = benchmark(cache_get)
-        assert result == "<p>Cached content</p>"
-
-    @pytest.mark.benchmark(group="cache")
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            }
-        },
-        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
-    )
-    def test_cache_set(self, benchmark, cache, simple_block):
-        """Benchmark cache set performance."""
-
-        def cache_set():
-            cache.set(simple_block.pk, "<p>New content</p>")
-
-        benchmark(cache_set)
-
-    @pytest.mark.benchmark(group="cache")
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            }
-        },
-        WAGTAIL_REUSABLE_BLOCKS={"CACHE_ENABLED": True},
-    )
-    def test_cache_invalidate(self, benchmark, cache, simple_block):
-        """Benchmark cache invalidation performance."""
-        # Pre-populate cache
-        cache.set(simple_block.pk, "<p>Cached content</p>")
-
-        def cache_invalidate():
-            cache.invalidate(simple_block.pk)
-            # Re-populate for next iteration
-            cache.set(simple_block.pk, "<p>Cached content</p>")
-
-        benchmark(cache_invalidate)
 
 
 class TestAdminBenchmarks:

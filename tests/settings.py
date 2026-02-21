@@ -124,8 +124,3 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
     ],
 }
-
-# Disable caching in tests by default
-WAGTAIL_REUSABLE_BLOCKS = {
-    "CACHE_ENABLED": False,
-}
