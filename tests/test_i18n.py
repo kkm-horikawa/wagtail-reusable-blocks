@@ -39,9 +39,9 @@ class TestPOFileValidity:
         # Count msgid entries (excluding the header empty msgid)
         msgid_count = content.count('msgid "') - 1  # Subtract 1 for header
 
-        assert (
-            msgid_count >= 25
-        ), f"Expected at least 25 translatable strings, found {msgid_count}"
+        assert msgid_count >= 25, (
+            f"Expected at least 25 translatable strings, found {msgid_count}"
+        )
 
     def test_po_file_syntax_with_msgfmt(self):
         """PO file should pass msgfmt syntax check."""
@@ -69,9 +69,9 @@ class TestPOFileValidity:
         # Fuzzy flag indicates uncertain translations
         fuzzy_count = content.count("#, fuzzy")
 
-        assert (
-            fuzzy_count == 0
-        ), f"Found {fuzzy_count} fuzzy translations in source PO file"
+        assert fuzzy_count == 0, (
+            f"Found {fuzzy_count} fuzzy translations in source PO file"
+        )
 
 
 class TestTranslationInfrastructure:
@@ -148,9 +148,9 @@ class TestLanguageSwitching:
         ]
 
         for string in expected_strings:
-            assert (
-                f'msgid "{string}"' in content
-            ), f"String not found in PO file: {string}"
+            assert f'msgid "{string}"' in content, (
+                f"String not found in PO file: {string}"
+            )
 
 
 class TestBlockLabels:
