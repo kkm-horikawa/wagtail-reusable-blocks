@@ -36,7 +36,8 @@ def block_slots_view(request: "HttpRequest", block_id: int) -> JsonResponse:
         }
 
     Example:
-        GET /admin/reusable-blocks/blocks/123/slots/
+        GET /<admin-url>/reusable-blocks/blocks/123/slots/
+        (The admin URL prefix depends on WAGTAIL_ADMIN_URL_PATH setting.)
 
         Response:
         {
