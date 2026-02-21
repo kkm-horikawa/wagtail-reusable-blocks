@@ -406,6 +406,7 @@ When you return to this project, you should be able to answer:
 | Why detect circular refs at save time? | Better UX, fail fast with clear error messages |
 | Why store slot content in page? | Same layout, different content per page |
 | Why JavaScript widget for slots? | Better UX - auto-populated dropdowns instead of text input |
+| Why inject slot URL via `insert_global_admin_js`? | Avoids hardcoding `/admin/` prefix; `reverse()` at runtime produces the correct URL regardless of `WAGTAIL_ADMIN_URL_PATH` customization |
 | Can v0.1.0 and v0.2.0 coexist? | Yes! Fully backward compatible, use both in same page |
 | Why two ViewSets for API (v0.8.0)? | Separate read-only (public delivery) from CRUD (internal tooling) concerns |
 | Why delegate auth to the application? | Library cannot know each project's security model; settings-based delegation avoids hard-coding |
