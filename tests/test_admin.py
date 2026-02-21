@@ -1,12 +1,18 @@
 """Tests for ReusableBlock admin UI customization."""
 
+import json
+from unittest import mock
+
 import pytest
 from django.test import override_settings
 
 from wagtail_reusable_blocks.models import ReusableBlock
 from wagtail_reusable_blocks.wagtail_hooks import (
+    BLOCK_ID_PLACEHOLDER,
+    BLOCK_ID_PLACEHOLDER_INT,
     ReusableBlockFilterSet,
     ReusableBlockViewSet,
+    inject_reusable_blocks_config,
 )
 
 
@@ -160,3 +166,236 @@ class TestWagtailHooksRegistration:
         # If we got here without errors, the conditional worked correctly
         # The ViewSet class still exists but register_snippet wasn't called
         assert True
+
+
+class TestInjectReusableBlocksConfig:
+    """Tests for inject_reusable_blocks_config hook.
+
+    ## Decision Table: DT-INJECT-CONFIG
+
+    | ID  | reverse result                        | Expected placeholder | Expected no /0/ |
+    |-----|---------------------------------------|----------------------|-----------------|
+    | DT1 | /admin/reusable-blocks/blocks/0/slots/| __BLOCK_ID__         | True            |
+    | DT2 | /cms/reusable-blocks/blocks/0/slots/  | __BLOCK_ID__         | True            |
+    """
+
+    MOCK_REVERSE_PATH = "wagtail_reusable_blocks.wagtail_hooks.reverse"
+    DEFAULT_REVERSED_URL = "/admin/reusable-blocks/blocks/0/slots/"
+
+    @pytest.fixture
+    def mock_reverse(self):
+        """Mock django.urls.reverse to avoid URL resolver dependency."""
+        with mock.patch(self.MOCK_REVERSE_PATH) as mocked:
+            mocked.return_value = self.DEFAULT_REVERSED_URL
+            yield mocked
+
+    def test_returns_script_tag(self, mock_reverse):
+        """Return value wraps config in a <script> tag.
+
+        Purpose: Verify inject_reusable_blocks_config() returns a string
+            containing <script> tags so the browser can execute the config.
+        Category: Normal case
+        Target: inject_reusable_blocks_config()
+        Technique: Statement coverage (C0)
+        Test data: Default reversed URL /admin/reusable-blocks/blocks/0/slots/
+        """
+        result = inject_reusable_blocks_config()
+
+        assert result.startswith("<script>")
+        assert result.endswith("</script>")
+
+    def test_contains_global_config_variable(self, mock_reverse):
+        """Return value sets window.wagtailReusableBlocksConfig.
+
+        Purpose: Verify the script assigns to the expected global variable
+            so slot-chooser.js can read the configuration.
+        Category: Normal case
+        Target: inject_reusable_blocks_config()
+        Technique: Statement coverage (C0)
+        Test data: Default reversed URL
+        """
+        result = inject_reusable_blocks_config()
+
+        assert "window.wagtailReusableBlocksConfig=" in result
+
+    def test_contains_slots_url_template_key(self, mock_reverse):
+        """JSON config contains 'slotsUrlTemplate' key.
+
+        Purpose: Verify the JSON payload includes the slotsUrlTemplate key
+            that slot-chooser.js uses to construct fetch URLs.
+        Category: Normal case
+        Target: inject_reusable_blocks_config()
+        Technique: Statement coverage (C0)
+        Test data: Default reversed URL
+        """
+        result = inject_reusable_blocks_config()
+
+        assert "slotsUrlTemplate" in result
+
+    def test_url_contains_block_id_placeholder(self, mock_reverse):
+        """URL template contains __BLOCK_ID__ placeholder string.
+
+        Purpose: Verify the integer placeholder (0) is replaced with the
+            string placeholder (__BLOCK_ID__) so JavaScript can substitute
+            the actual block ID at runtime.
+        Category: Normal case
+        Target: inject_reusable_blocks_config()
+        Technique: Equivalence partitioning
+        Test data: Default reversed URL with /0/ that should become /__BLOCK_ID__/
+        """
+        result = inject_reusable_blocks_config()
+
+        assert BLOCK_ID_PLACEHOLDER in result
+
+    def test_url_does_not_contain_placeholder_integer(self, mock_reverse):
+        """URL template does not contain the raw placeholder integer /0/.
+
+        Purpose: Verify the .replace() call correctly substitutes /0/ with
+            /__BLOCK_ID__/ so no raw integer placeholder leaks into the URL.
+        Category: Edge case
+        Target: inject_reusable_blocks_config() - .replace() logic
+        Technique: Boundary value analysis
+        Test data: Default reversed URL where /0/ must be fully replaced
+        """
+        result = inject_reusable_blocks_config()
+        config_json = result.removeprefix(
+            "<script>window.wagtailReusableBlocksConfig="
+        ).removesuffix(";</script>")
+        parsed = json.loads(config_json)
+
+        assert f"/{BLOCK_ID_PLACEHOLDER_INT}/" not in parsed["slotsUrlTemplate"]
+
+    def test_returned_json_is_valid(self, mock_reverse):
+        """JSON embedded in the script tag is parseable.
+
+        Purpose: Verify the JSON produced by json.dumps() is valid so the
+            browser can parse it without errors.
+        Category: Normal case
+        Target: inject_reusable_blocks_config()
+        Technique: Statement coverage (C0)
+        Test data: Default reversed URL
+        """
+        result = inject_reusable_blocks_config()
+        config_json = result.removeprefix(
+            "<script>window.wagtailReusableBlocksConfig="
+        ).removesuffix(";</script>")
+
+        parsed = json.loads(config_json)
+
+        assert isinstance(parsed, dict)
+        assert "slotsUrlTemplate" in parsed
+
+    def test_url_template_ends_with_slots_path(self, mock_reverse):
+        """URL template preserves the /slots/ suffix after placeholder replacement.
+
+        Purpose: Verify the .replace() with count=1 only replaces the block ID
+            segment and does not corrupt other parts of the URL path.
+        Category: Normal case
+        Target: inject_reusable_blocks_config() - .replace() logic
+        Technique: Boundary value analysis
+        Test data: Default reversed URL
+        """
+        result = inject_reusable_blocks_config()
+        config_json = result.removeprefix(
+            "<script>window.wagtailReusableBlocksConfig="
+        ).removesuffix(";</script>")
+        parsed = json.loads(config_json)
+
+        assert parsed["slotsUrlTemplate"].endswith("/slots/")
+
+    def test_reverse_called_with_correct_arguments(self, mock_reverse):
+        """reverse() is called with the correct URL name and kwargs.
+
+        Purpose: Verify inject_reusable_blocks_config() calls reverse() with
+            the expected URL pattern name and placeholder integer as block_id
+            so URL resolution works for any WAGTAIL_ADMIN_URL_PATH.
+        Category: Normal case
+        Target: inject_reusable_blocks_config() - reverse() call
+        Technique: Statement coverage (C0)
+        Test data: N/A (verifying call arguments)
+        """
+        inject_reusable_blocks_config()
+
+        mock_reverse.assert_called_once_with(
+            "wagtail_reusable_blocks:block_slots",
+            kwargs={"block_id": BLOCK_ID_PLACEHOLDER_INT},
+        )
+
+    @pytest.mark.parametrize(
+        "admin_prefix,reversed_url",
+        [
+            pytest.param(
+                "/admin/",
+                "/admin/reusable-blocks/blocks/0/slots/",
+                id="DT1-default-admin-prefix",
+            ),
+            pytest.param(
+                "/cms/",
+                "/cms/reusable-blocks/blocks/0/slots/",
+                id="DT2-custom-admin-prefix",
+            ),
+        ],
+    )
+    def test_works_with_custom_admin_url_prefix(self, admin_prefix, reversed_url):
+        """URL template adapts to custom WAGTAIL_ADMIN_URL_PATH settings.
+
+        Purpose: Verify inject_reusable_blocks_config() produces correct URL
+            templates regardless of the admin URL prefix, ensuring the fix for
+            hardcoded /admin/ paths works.
+        Category: Normal case
+        Target: inject_reusable_blocks_config()
+        Technique: Decision table (DT-INJECT-CONFIG)
+        Test data: DT1=/admin/ prefix, DT2=/cms/ prefix
+        """
+        with mock.patch(self.MOCK_REVERSE_PATH, return_value=reversed_url):
+            result = inject_reusable_blocks_config()
+
+        config_json = result.removeprefix(
+            "<script>window.wagtailReusableBlocksConfig="
+        ).removesuffix(";</script>")
+        parsed = json.loads(config_json)
+        url_template = parsed["slotsUrlTemplate"]
+
+        assert BLOCK_ID_PLACEHOLDER in url_template
+        assert f"/{BLOCK_ID_PLACEHOLDER_INT}/" not in url_template
+        assert url_template.startswith(admin_prefix.rstrip("/"))
+
+    def test_hook_registered_with_wagtail(self):
+        """inject_reusable_blocks_config is registered as insert_global_admin_js hook.
+
+        Purpose: Verify the function is discoverable by Wagtail's hook
+            registry so it actually runs in production.
+        Category: Normal case
+        Target: Wagtail hook registration of inject_reusable_blocks_config
+        Technique: Statement coverage (C0)
+        Test data: N/A
+        """
+        from wagtail import hooks
+
+        registered_hooks = hooks.get_hooks("insert_global_admin_js")
+
+        assert inject_reusable_blocks_config in registered_hooks
+
+    def test_only_first_occurrence_of_placeholder_int_is_replaced(self):
+        """Only the first /0/ in the URL is replaced, preserving any trailing /0/.
+
+        Purpose: Verify .replace(..., 1) replaces exactly one occurrence of the
+            placeholder integer, so if /0/ appears elsewhere in the URL it is
+            preserved (defensive against future URL pattern changes).
+        Category: Edge case
+        Target: inject_reusable_blocks_config() - .replace() count=1
+        Technique: Boundary value analysis
+        Test data: URL with two /0/ segments
+        """
+        url_with_double_zero = "/admin/reusable-blocks/blocks/0/slots/0/"
+        with mock.patch(self.MOCK_REVERSE_PATH, return_value=url_with_double_zero):
+            result = inject_reusable_blocks_config()
+
+        config_json = result.removeprefix(
+            "<script>window.wagtailReusableBlocksConfig="
+        ).removesuffix(";</script>")
+        parsed = json.loads(config_json)
+        url_template = parsed["slotsUrlTemplate"]
+
+        assert url_template.count(BLOCK_ID_PLACEHOLDER) == 1
+        assert f"/slots/{BLOCK_ID_PLACEHOLDER_INT}/" in url_template

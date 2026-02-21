@@ -361,18 +361,7 @@ body = StreamField([
 - Article layouts with consistent structure
 - Landing page sections
 
-**Important:** You need to include the app's URLs for slot detection to work:
-
-```python
-# urls.py
-from django.urls import path, include
-
-urlpatterns = [
-    # ... other URL patterns
-    path('admin/reusable-blocks/', include('wagtail_reusable_blocks.urls')),
-    # ... wagtail URLs
-]
-```
+**Note:** Slot detection URLs are registered automatically via Wagtail's `register_admin_urls` hook. No manual URL configuration is required.
 
 ## Slot-Based Templating Tutorial
 
@@ -629,13 +618,7 @@ Layout A → slot → Layout B → slot → Layout C ✅
 **Issue**: Selected a layout but no slot fields appear in the editor.
 
 **Solutions**:
-1. Ensure you've included the app's URLs in your project:
-   ```python
-   # urls.py
-   urlpatterns = [
-       path('admin/reusable-blocks/', include('wagtail_reusable_blocks.urls')),
-   ]
-   ```
+1. Ensure `wagtail_reusable_blocks` is in `INSTALLED_APPS` (slot detection URLs are registered automatically via the `register_admin_urls` hook — no manual URL include is needed)
 2. Check browser console for JavaScript errors
 3. Verify the layout has `data-slot` attributes in its HTML
 4. Clear browser cache and reload (Cmd+Shift+R or Ctrl+Shift+R)
@@ -658,7 +641,7 @@ Layout A → slot → Layout B → slot → Layout C ✅
 1. This is a caching issue - refresh the page
 2. If persists, clear browser cache
 3. Check browser console for API errors
-4. Verify the slot detection endpoint is accessible: `/admin/reusable-blocks/blocks/{id}/slots/`
+4. Verify the slot detection endpoint is accessible at `/<wagtail-admin-prefix>/reusable-blocks/blocks/{id}/slots/` (the prefix matches your `WAGTAIL_ADMIN_URL_PATH` setting, defaulting to `admin`)
 
 ### Search Not Working
 

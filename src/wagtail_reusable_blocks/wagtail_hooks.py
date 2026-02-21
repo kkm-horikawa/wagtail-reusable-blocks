@@ -1,8 +1,10 @@
 """Wagtail admin UI customizations for ReusableBlock."""
 
+import json
 from typing import TYPE_CHECKING
 
-from django.urls import include, path
+from django.urls import include, path, reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
 from wagtail.admin.filters import WagtailFilterSet
@@ -87,6 +89,25 @@ class ReusableBlockViewSet(SnippetViewSetType):  # type: ignore[misc]
 # This prevents double registration
 if get_setting("REGISTER_DEFAULT_SNIPPET"):
     register_snippet(ReusableBlockViewSet)
+
+
+BLOCK_ID_PLACEHOLDER = "__BLOCK_ID__"
+BLOCK_ID_PLACEHOLDER_INT = 0
+
+
+@hooks.register("insert_global_admin_js")  # type: ignore[untyped-decorator]
+def inject_reusable_blocks_config() -> str:
+    """Inject URL configuration for reusable blocks JavaScript.
+
+    Provides a URL template so slot-chooser.js can build correct fetch URLs
+    regardless of WAGTAIL_ADMIN_URL_PATH customization.
+    """
+    slots_url_template = reverse(
+        "wagtail_reusable_blocks:block_slots",
+        kwargs={"block_id": BLOCK_ID_PLACEHOLDER_INT},
+    ).replace(f"/{BLOCK_ID_PLACEHOLDER_INT}/", f"/{BLOCK_ID_PLACEHOLDER}/", 1)
+    config = json.dumps({"slotsUrlTemplate": slots_url_template})
+    return mark_safe(f"<script>window.wagtailReusableBlocksConfig={config};</script>")  # noqa: S308
 
 
 @hooks.register("register_admin_urls")  # type: ignore[untyped-decorator]
