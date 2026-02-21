@@ -154,8 +154,6 @@ SnippetChooserBlock        →    ReusableBlockChooserBlock (extends)
 ```python
 WAGTAIL_REUSABLE_BLOCKS = {
     'BLOCK_TYPES': [...],        # Allowed blocks in ReusableBlock.content
-    'CACHE_ENABLED': True,       # Enable caching (v0.3.0)
-    'CACHE_TIMEOUT': 3600,       # Cache TTL in seconds
     'MAX_NESTING_DEPTH': 5,      # Prevent deep nesting
     'TRACK_USAGE': True,         # Enable usage tracking (v0.3.0)
 }

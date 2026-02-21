@@ -129,16 +129,3 @@ msgid ""
 msgstr ""
 "Zirkuläre Referenz erkannt: Block '%(name)s' verweist auf Block "
 "'%(ref_name)s', was einen Zyklus erzeugt. %(error)s"
-
-#: views/cache.py:41
-#, python-format
-msgid "Cache cleared for '%(name)s'."
-msgstr "Cache für '%(name)s' geleert."
-
-#: views/cache.py:75
-msgid "All ReusableBlock cache entries have been cleared."
-msgstr "Alle ReusableBlock-Cache-Einträge wurden geleert."
-
-#: wagtail_hooks.py:133
-msgid "Clear Cache"
-msgstr "Cache leeren"
