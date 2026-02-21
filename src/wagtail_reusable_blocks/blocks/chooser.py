@@ -60,10 +60,6 @@ class ReusableBlockChooserBlock(SnippetChooserBlockType):  # type: ignore[misc]
         Implements depth tracking to prevent infinite recursion from nested blocks.
         If maximum nesting depth is exceeded, shows a warning message instead.
 
-        Caching:
-            Results are cached using ReusableBlockCache when enabled.
-            Cache is skipped for nested blocks to ensure context propagation.
-
         Args:
             value: The selected ReusableBlock instance, or None
             context: Template context to pass to the block's render method
@@ -109,31 +105,12 @@ class ReusableBlockChooserBlock(SnippetChooserBlockType):  # type: ignore[misc]
             )
 
         try:
-            # Only use cache for top-level blocks (depth=0) to avoid
-            # caching context-dependent nested content
-            use_cache = current_depth == 0
-
-            if use_cache:
-                from ..cache import ReusableBlockCache
-
-                cached = ReusableBlockCache.get(value.pk)
-                if cached is not None:
-                    return cached
-
             # Increment depth for nested rendering
             nested_context = context.copy()
             nested_context["_reusable_block_depth"] = current_depth + 1
 
             # Pass the context to the block's render method
-            rendered = value.render(context=nested_context)
-
-            # Cache the result for top-level blocks
-            if use_cache:
-                from ..cache import ReusableBlockCache
-
-                ReusableBlockCache.set(value.pk, rendered)
-
-            return rendered
+            return value.render(context=nested_context)
         except Exception:
             # Handle deleted blocks or rendering errors gracefully
             # Return empty string instead of breaking the page

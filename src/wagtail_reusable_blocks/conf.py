@@ -13,11 +13,6 @@ DEFAULTS = {
     # v0.2.0 settings
     "SLOT_ATTRIBUTE": "data-slot",
     "SLOT_LABEL_ATTRIBUTE": "data-slot-label",
-    # v0.3.0 settings - Caching
-    "CACHE_ENABLED": True,
-    "CACHE_BACKEND": "default",
-    "CACHE_TIMEOUT": 3600,  # 1 hour
-    "CACHE_PREFIX": "wrb:",
     # v0.5.0 settings - Preview
     "PREVIEW_TEMPLATE": "wagtail_reusable_blocks/preview.html",
     # v0.8.0 settings - API
