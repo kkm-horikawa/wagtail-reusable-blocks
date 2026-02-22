@@ -28,7 +28,7 @@ from unittest import mock
 
 import pytest
 from django.utils.text import slugify
-from rest_framework import permissions, serializers
+from rest_framework import permissions, serializers, status
 
 from wagtail_reusable_blocks.api.serializers import (
     ReusableBlockSerializer,
@@ -1101,3 +1101,497 @@ class TestApiModuleExports:
             "ReusableBlockAPIViewSet",
             "ReusableBlockModelViewSet",
         }
+
+
+# ---------------------------------------------------------------------------
+# ReusableBlockModelViewSet - publish action
+# ---------------------------------------------------------------------------
+class TestReusableBlockModelViewSetPublish:
+    """ReusableBlockModelViewSet.publish action tests."""
+
+    def _call_publish(self):
+        """Helper to create a viewset and invoke the publish action.
+
+        Returns a tuple of (response, mock_instance, mock_request, viewset).
+        """
+        viewset = ReusableBlockModelViewSet()
+        mock_instance = mock.MagicMock()
+        mock_revision = mock.Mock()
+        mock_instance.save_revision.return_value = mock_revision
+        mock_request = mock.Mock()
+        mock_request.user = mock.Mock()
+        viewset.get_object = mock.Mock(return_value=mock_instance)
+        mock_serializer = mock.Mock()
+        mock_serializer.data = {"id": 1, "name": "Block", "live": True}
+        viewset.get_serializer = mock.Mock(return_value=mock_serializer)
+        viewset.request = mock_request
+
+        response = viewset.publish(mock_request)
+        return response, mock_instance, mock_request, viewset, mock_revision
+
+    def test_publish_creates_revision_then_publishes(self):
+        """Verify that publish() creates a revision and passes it to publish().
+
+        Purpose: Verify that the publish action first creates a revision via
+                 save_revision(user=request.user), then delegates to
+                 DraftStateMixin.publish(revision, user=request.user),
+                 ensuring the Wagtail revision workflow is triggered correctly.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.publish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        _response, mock_instance, mock_request, _viewset, mock_revision = (
+            self._call_publish()
+        )
+
+        mock_instance.save_revision.assert_called_once_with(user=mock_request.user)
+        mock_instance.publish.assert_called_once_with(
+            mock_revision, user=mock_request.user, skip_permission_checks=True
+        )
+
+    def test_publish_calls_refresh_from_db(self):
+        """Verify that refresh_from_db() is called after publish.
+
+        Purpose: Verify that the publish action refreshes the instance
+                 from the database after publishing, ensuring the response
+                 reflects the latest DB state (e.g. updated timestamps).
+        Type: Normal
+        Target: ReusableBlockModelViewSet.publish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        _response, mock_instance, _mock_request, _viewset, _ = self._call_publish()
+
+        mock_instance.refresh_from_db.assert_called_once()
+
+    def test_publish_returns_serializer_data(self):
+        """Verify that the response body contains serialized instance data.
+
+        Purpose: Verify that the publish action returns the serialized
+                 instance data in the response, ensuring clients receive
+                 the updated block representation.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.publish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        response, _mock_instance, _mock_request, _viewset, _ = self._call_publish()
+
+        assert response.data == {"id": 1, "name": "Block", "live": True}
+
+    def test_publish_returns_200_status(self):
+        """Verify that the response status code is 200 OK.
+
+        Purpose: Verify that the publish action returns HTTP 200 OK,
+                 ensuring the idempotent publish operation signals success.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.publish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        response, _mock_instance, _mock_request, _viewset, _ = self._call_publish()
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_publish_serializes_refreshed_instance(self):
+        """Verify that get_serializer is called with the refreshed instance.
+
+        Purpose: Verify that the publish action passes the instance
+                 (after refresh_from_db) to get_serializer, ensuring
+                 the serialized response reflects post-publish state.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.publish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        _response, mock_instance, _mock_request, viewset, _ = self._call_publish()
+
+        viewset.get_serializer.assert_called_once_with(mock_instance)
+
+    def test_publish_calls_methods_in_order(self):
+        """Verify that save_revision -> publish -> refresh_from_db -> get_serializer are called in order.
+
+        Purpose: Verify the correct sequence of operations: create a revision,
+                 publish with it, refresh from DB, then serialize, ensuring
+                 data consistency in the response.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.publish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        viewset = ReusableBlockModelViewSet()
+        mock_instance = mock.MagicMock()
+        mock_revision = mock.Mock()
+        mock_request = mock.Mock()
+        mock_request.user = mock.Mock()
+        viewset.get_object = mock.Mock(return_value=mock_instance)
+        mock_serializer = mock.Mock()
+        mock_serializer.data = {}
+        viewset.get_serializer = mock.Mock(return_value=mock_serializer)
+        viewset.request = mock_request
+        call_order = []
+        mock_instance.save_revision.side_effect = lambda **kw: (
+            call_order.append("save_revision"),
+            mock_revision,
+        )[1]
+        mock_instance.publish.side_effect = lambda *a, **kw: call_order.append(
+            "publish"
+        )
+        mock_instance.refresh_from_db.side_effect = lambda: call_order.append(
+            "refresh_from_db"
+        )
+        viewset.get_serializer.side_effect = lambda inst: (
+            call_order.append("get_serializer"),
+            mock_serializer,
+        )[1]
+
+        viewset.publish(mock_request)
+
+        assert call_order == [
+            "save_revision",
+            "publish",
+            "refresh_from_db",
+            "get_serializer",
+        ]
+
+
+# ---------------------------------------------------------------------------
+# ReusableBlockModelViewSet - unpublish action
+# ---------------------------------------------------------------------------
+class TestReusableBlockModelViewSetUnpublish:
+    """ReusableBlockModelViewSet.unpublish action tests."""
+
+    def _call_unpublish(self):
+        """Helper to create a viewset and invoke the unpublish action.
+
+        Returns a tuple of (response, mock_instance, mock_request, viewset,
+        mock_action_cls, mock_action_instance).
+        """
+        viewset = ReusableBlockModelViewSet()
+        mock_instance = mock.MagicMock()
+        mock_request = mock.Mock()
+        mock_request.user = mock.Mock()
+        viewset.get_object = mock.Mock(return_value=mock_instance)
+        mock_serializer = mock.Mock()
+        mock_serializer.data = {"id": 1, "name": "Block", "live": False}
+        viewset.get_serializer = mock.Mock(return_value=mock_serializer)
+        viewset.request = mock_request
+
+        mock_action_instance = mock.Mock()
+        with mock.patch(
+            "wagtail_reusable_blocks.api.views.UnpublishAction",
+            return_value=mock_action_instance,
+        ) as mock_action_cls:
+            response = viewset.unpublish(mock_request)
+        return (
+            response,
+            mock_instance,
+            mock_request,
+            viewset,
+            mock_action_cls,
+            mock_action_instance,
+        )
+
+    def test_unpublish_creates_action_with_instance_and_user(self):
+        """Verify that UnpublishAction is instantiated with (instance, user=request.user).
+
+        Purpose: Verify that the unpublish action creates an UnpublishAction
+                 with the correct instance and user, ensuring the Wagtail
+                 unpublish workflow is configured correctly.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        (
+            _response,
+            mock_instance,
+            mock_request,
+            _viewset,
+            mock_action_cls,
+            _mock_action_instance,
+        ) = self._call_unpublish()
+
+        mock_action_cls.assert_called_once_with(mock_instance, user=mock_request.user)
+
+    def test_unpublish_executes_with_skip_permission_checks(self):
+        """Verify that execute(skip_permission_checks=True) is called.
+
+        Purpose: Verify that the unpublish action calls execute with
+                 skip_permission_checks=True since DRF ViewSet already
+                 handles authentication/authorization.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        (
+            _response,
+            _mock_instance,
+            _mock_request,
+            _viewset,
+            _mock_action_cls,
+            mock_action_instance,
+        ) = self._call_unpublish()
+
+        mock_action_instance.execute.assert_called_once_with(
+            skip_permission_checks=True
+        )
+
+    def test_unpublish_calls_refresh_from_db(self):
+        """Verify that refresh_from_db() is called after unpublish.
+
+        Purpose: Verify that the unpublish action refreshes the instance
+                 from the database after unpublishing, ensuring the response
+                 reflects the latest DB state.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        (
+            _response,
+            mock_instance,
+            _mock_request,
+            _viewset,
+            _mock_action_cls,
+            _mock_action_instance,
+        ) = self._call_unpublish()
+
+        mock_instance.refresh_from_db.assert_called_once()
+
+    def test_unpublish_returns_serializer_data(self):
+        """Verify that the response body contains serialized instance data.
+
+        Purpose: Verify that the unpublish action returns the serialized
+                 instance data in the response, ensuring clients receive
+                 the updated block representation with live=False.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        (
+            response,
+            _mock_instance,
+            _mock_request,
+            _viewset,
+            _mock_action_cls,
+            _mock_action_instance,
+        ) = self._call_unpublish()
+
+        assert response.data == {"id": 1, "name": "Block", "live": False}
+
+    def test_unpublish_returns_200_status(self):
+        """Verify that the response status code is 200 OK.
+
+        Purpose: Verify that the unpublish action returns HTTP 200 OK,
+                 ensuring the idempotent unpublish operation signals success.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        (
+            response,
+            _mock_instance,
+            _mock_request,
+            _viewset,
+            _mock_action_cls,
+            _mock_action_instance,
+        ) = self._call_unpublish()
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_unpublish_serializes_refreshed_instance(self):
+        """Verify that get_serializer is called with the refreshed instance.
+
+        Purpose: Verify that the unpublish action passes the instance
+                 (after refresh_from_db) to get_serializer, ensuring
+                 the serialized response reflects post-unpublish state.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        (
+            _response,
+            mock_instance,
+            _mock_request,
+            viewset,
+            _mock_action_cls,
+            _mock_action_instance,
+        ) = self._call_unpublish()
+
+        viewset.get_serializer.assert_called_once_with(mock_instance)
+
+    def test_unpublish_calls_methods_in_order(self):
+        """Verify that UnpublishAction.execute -> refresh_from_db -> get_serializer are called in order.
+
+        Purpose: Verify the correct sequence of operations: execute the
+                 unpublish action, refresh from DB, then serialize, ensuring
+                 data consistency in the response.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.unpublish(request)
+        Technique: Equivalence partitioning
+        Test data: Authenticated user request
+        """
+        viewset = ReusableBlockModelViewSet()
+        mock_instance = mock.MagicMock()
+        mock_request = mock.Mock()
+        mock_request.user = mock.Mock()
+        viewset.get_object = mock.Mock(return_value=mock_instance)
+        mock_serializer = mock.Mock()
+        mock_serializer.data = {}
+        viewset.get_serializer = mock.Mock(return_value=mock_serializer)
+        viewset.request = mock_request
+        call_order = []
+        mock_action_instance = mock.Mock()
+        mock_action_instance.execute.side_effect = lambda **kw: call_order.append(
+            "execute"
+        )
+        mock_instance.refresh_from_db.side_effect = lambda: call_order.append(
+            "refresh_from_db"
+        )
+        viewset.get_serializer.side_effect = lambda inst: (
+            call_order.append("get_serializer"),
+            mock_serializer,
+        )[1]
+
+        with mock.patch(
+            "wagtail_reusable_blocks.api.views.UnpublishAction",
+            return_value=mock_action_instance,
+        ):
+            viewset.unpublish(mock_request)
+
+        assert call_order == ["execute", "refresh_from_db", "get_serializer"]
+
+
+# ---------------------------------------------------------------------------
+# ReusableBlockModelViewSet - render action
+# ---------------------------------------------------------------------------
+class TestReusableBlockModelViewSetRender:
+    """ReusableBlockModelViewSet.render action tests."""
+
+    def _make_viewset_for_render(self, mock_instance=None):
+        """Helper to create a viewset configured for render action tests.
+
+        Returns a tuple of (viewset, mock_instance, mock_request).
+        """
+        viewset = ReusableBlockModelViewSet()
+        if mock_instance is None:
+            mock_instance = mock.MagicMock()
+        mock_request = mock.Mock()
+        viewset.get_object = mock.Mock(return_value=mock_instance)
+        viewset.request = mock_request
+        return viewset, mock_instance, mock_request
+
+    def test_render_calls_instance_render(self):
+        """Verify that render() calls instance.render().
+
+        Purpose: Verify that the render action delegates HTML generation
+                 to the model's render() method, ensuring the block's
+                 StreamField content is rendered.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.render(request)
+        Technique: Equivalence partitioning
+        Test data: Instance with renderable content
+        """
+        viewset, mock_instance, mock_request = self._make_viewset_for_render()
+        mock_instance.render.return_value = "<p>Hello</p>"
+
+        viewset.render(mock_request)
+
+        mock_instance.render.assert_called_once()
+
+    def test_render_returns_html_in_response(self):
+        """Verify that the response contains {"html": "..."} with rendered content.
+
+        Purpose: Verify that the render action wraps the rendered HTML
+                 in a {"html": ...} JSON envelope, ensuring clients
+                 can parse the rendered output.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.render(request)
+        Technique: Equivalence partitioning
+        Test data: Instance rendering "<div>Content</div>"
+        """
+        viewset, mock_instance, mock_request = self._make_viewset_for_render()
+        mock_instance.render.return_value = "<div>Content</div>"
+
+        response = viewset.render(mock_request)
+
+        assert response.data == {"html": "<div>Content</div>"}
+
+    def test_render_returns_200_status(self):
+        """Verify that the response status code is 200 OK on success.
+
+        Purpose: Verify that the render action returns HTTP 200 OK
+                 when rendering succeeds, signaling a successful operation.
+        Type: Normal
+        Target: ReusableBlockModelViewSet.render(request)
+        Technique: Equivalence partitioning
+        Test data: Instance with renderable content
+        """
+        viewset, mock_instance, mock_request = self._make_viewset_for_render()
+        mock_instance.render.return_value = "<p>OK</p>"
+
+        response = viewset.render(mock_request)
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_render_returns_500_on_exception(self):
+        """Verify that a 500 response is returned when render() raises an exception.
+
+        Purpose: Verify that the render action catches exceptions from
+                 instance.render() and returns HTTP 500 with an error
+                 detail, ensuring graceful error handling for template
+                 or rendering failures.
+        Type: Error
+        Target: ReusableBlockModelViewSet.render(request)
+        Technique: Error guessing
+        Test data: Instance whose render() raises RuntimeError
+        """
+        viewset, mock_instance, mock_request = self._make_viewset_for_render()
+        mock_instance.render.side_effect = RuntimeError("Template not found")
+
+        response = viewset.render(mock_request)
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_render_returns_error_detail_on_exception(self):
+        """Verify that the error message is included in the response detail.
+
+        Purpose: Verify that the render action includes the exception
+                 message in the {"detail": ...} response body, enabling
+                 clients to diagnose rendering failures.
+        Type: Error
+        Target: ReusableBlockModelViewSet.render(request)
+        Technique: Error guessing
+        Test data: Instance whose render() raises ValueError with message
+        """
+        viewset, mock_instance, mock_request = self._make_viewset_for_render()
+        mock_instance.render.side_effect = ValueError("Invalid block data")
+
+        response = viewset.render(mock_request)
+
+        assert response.data == {"detail": "Invalid block data"}
+
+    def test_render_returns_empty_html_string(self):
+        """Verify that an empty HTML string is returned correctly.
+
+        Purpose: Verify that the render action handles an empty render
+                 result (e.g. a block with no content), returning an
+                 empty string in the html field.
+        Type: Edge case
+        Target: ReusableBlockModelViewSet.render(request)
+        Technique: Boundary analysis
+        Test data: Instance rendering empty string
+        """
+        viewset, mock_instance, mock_request = self._make_viewset_for_render()
+        mock_instance.render.return_value = ""
+
+        response = viewset.render(mock_request)
+
+        assert response.data == {"html": ""}
+        assert response.status_code == status.HTTP_200_OK
