@@ -3,7 +3,10 @@
 from typing import Any
 
 from django.utils.module_loading import import_string
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from wagtail.actions.unpublish import UnpublishAction
 from wagtail.api.v2.filters import FieldsFilter, OrderingFilter, SearchFilter
 from wagtail.api.v2.views import BaseAPIViewSet
 
@@ -130,3 +133,59 @@ class ReusableBlockModelViewSet(viewsets.ModelViewSet):  # type: ignore[misc]
             qs = qs.filter(name__icontains=search)
 
         return qs
+
+    @action(  # type: ignore[untyped-decorator]
+        detail=True,
+        methods=["post"],
+        url_path="publish",
+        url_name="publish",
+    )
+    def publish(self, request: Any, **kwargs: Any) -> Response:
+        """Publish a reusable block via DraftStateMixin.publish().
+
+        Creates a revision, sets live=True, and updates publishing timestamps.
+        Idempotent: succeeds even if the block is already published.
+        """
+        instance = self.get_object()
+        revision = instance.save_revision(user=request.user)
+        instance.publish(revision, user=request.user, skip_permission_checks=True)
+        instance.refresh_from_db()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(  # type: ignore[untyped-decorator]
+        detail=True,
+        methods=["post"],
+        url_path="unpublish",
+        url_name="unpublish",
+    )
+    def unpublish(self, request: Any, **kwargs: Any) -> Response:
+        """Unpublish a reusable block via DraftStateMixin.unpublish().
+
+        Sets live=False. Idempotent: succeeds even if already unpublished.
+        """
+        instance = self.get_object()
+        UnpublishAction(instance, user=request.user).execute(
+            skip_permission_checks=True
+        )
+        instance.refresh_from_db()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(  # type: ignore[untyped-decorator]
+        detail=True,
+        methods=["get"],
+        url_path="render",
+        url_name="render",
+    )
+    def render(self, request: Any, **kwargs: Any) -> Response:
+        """Render a reusable block to HTML."""
+        instance = self.get_object()
+        try:
+            html = instance.render()
+        except Exception as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        return Response({"html": html}, status=status.HTTP_200_OK)

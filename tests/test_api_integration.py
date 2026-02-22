@@ -704,3 +704,236 @@ class TestDRFCircularReferenceValidation:
         )
 
         assert response.status_code == 400
+
+
+class TestDRFPublishEndpoint:
+    """DRF publish action endpoint tests."""
+
+    @pytest.mark.django_db
+    def test_publish_draft_block(self, api_client, admin_user, draft_block):
+        """POST /api/reusable-blocks/<id>/publish/ publishes a draft block.
+
+        Purpose: Verify that a draft block transitions to live=True when the
+                 publish endpoint is called, confirming DraftStateMixin.publish()
+                 integration works through the API layer.
+        Type: Normal
+        Technique: API endpoint
+        Integration: POST /api/reusable-blocks/<id>/publish/ -> DraftStateMixin.publish -> Database
+        Test data:
+        - Admin user
+        - 1 block with live=False
+        Scenario:
+        1. Log in as admin
+        2. POST to /api/reusable-blocks/<id>/publish/
+        3. Verify response is 200 and live=True in response data
+        4. Verify DB state changed to live=True
+        """
+        api_client.force_login(admin_user)
+
+        response = api_client.post(f"/api/reusable-blocks/{draft_block.pk}/publish/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["live"] is True
+        draft_block.refresh_from_db()
+        assert draft_block.live is True
+
+    @pytest.mark.django_db
+    def test_publish_already_live_block_is_idempotent(
+        self, api_client, admin_user, live_block
+    ):
+        """POST /api/reusable-blocks/<id>/publish/ succeeds for already-live block.
+
+        Purpose: Verify that publishing an already-live block is idempotent,
+                 returning 200 with live=True without error.
+        Type: Normal (idempotency)
+        Technique: API endpoint
+        Integration: POST /api/reusable-blocks/<id>/publish/ -> DraftStateMixin.publish -> Database
+        Test data:
+        - Admin user
+        - 1 block with live=True
+        Scenario:
+        1. Log in as admin
+        2. POST to /api/reusable-blocks/<id>/publish/ (block already live)
+        3. Verify response is 200 and live is still True
+        """
+        api_client.force_login(admin_user)
+
+        response = api_client.post(f"/api/reusable-blocks/{live_block.pk}/publish/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["live"] is True
+        live_block.refresh_from_db()
+        assert live_block.live is True
+
+    @pytest.mark.django_db
+    def test_publish_unauthenticated_returns_403(self, api_client, draft_block):
+        """POST /api/reusable-blocks/<id>/publish/ returns 403 without authentication.
+
+        Purpose: Verify that unauthenticated requests to the publish endpoint
+                 are rejected with 403, ensuring access control.
+        Type: Error
+        Technique: Authentication/authorization
+        Integration: POST /api/reusable-blocks/<id>/publish/ -> IsAuthenticated -> 403
+        Test data:
+        - 1 draft block (accessed without authentication)
+        Scenario:
+        1. POST to /api/reusable-blocks/<id>/publish/ without login
+        2. Verify response is 403
+        """
+        response = api_client.post(f"/api/reusable-blocks/{draft_block.pk}/publish/")
+
+        assert response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_publish_nonexistent_id_returns_404(self, api_client, admin_user):
+        """POST /api/reusable-blocks/<id>/publish/ returns 404 for non-existent ID.
+
+        Purpose: Verify that publishing a non-existent block returns 404.
+        Type: Error
+        Technique: API endpoint
+        Integration: POST /api/reusable-blocks/99999/publish/ -> get_object -> 404
+        Test data:
+        - Admin user
+        - Non-existent ID: 99999
+        Scenario:
+        1. Log in as admin
+        2. POST to /api/reusable-blocks/99999/publish/
+        3. Verify response is 404
+        """
+        api_client.force_login(admin_user)
+
+        response = api_client.post("/api/reusable-blocks/99999/publish/")
+
+        assert response.status_code == 404
+
+
+class TestDRFUnpublishEndpoint:
+    """DRF unpublish action endpoint tests."""
+
+    @pytest.mark.django_db
+    def test_unpublish_live_block(self, api_client, admin_user, live_block):
+        """POST /api/reusable-blocks/<id>/unpublish/ unpublishes a live block.
+
+        Purpose: Verify that a live block transitions to live=False when the
+                 unpublish endpoint is called, confirming DraftStateMixin.unpublish()
+                 integration works through the API layer.
+        Type: Normal
+        Technique: API endpoint
+        Integration: POST /api/reusable-blocks/<id>/unpublish/ -> DraftStateMixin.unpublish -> Database
+        Test data:
+        - Admin user
+        - 1 block with live=True
+        Scenario:
+        1. Log in as admin
+        2. POST to /api/reusable-blocks/<id>/unpublish/
+        3. Verify response is 200 and live=False in response data
+        4. Verify DB state changed to live=False
+        """
+        api_client.force_login(admin_user)
+
+        response = api_client.post(f"/api/reusable-blocks/{live_block.pk}/unpublish/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["live"] is False
+        live_block.refresh_from_db()
+        assert live_block.live is False
+
+    @pytest.mark.django_db
+    def test_unpublish_already_draft_block_is_idempotent(
+        self, api_client, admin_user, draft_block
+    ):
+        """POST /api/reusable-blocks/<id>/unpublish/ succeeds for already-draft block.
+
+        Purpose: Verify that unpublishing an already-draft block is idempotent,
+                 returning 200 with live=False without error.
+        Type: Normal (idempotency)
+        Technique: API endpoint
+        Integration: POST /api/reusable-blocks/<id>/unpublish/ -> DraftStateMixin.unpublish -> Database
+        Test data:
+        - Admin user
+        - 1 block with live=False
+        Scenario:
+        1. Log in as admin
+        2. POST to /api/reusable-blocks/<id>/unpublish/ (block already draft)
+        3. Verify response is 200 and live is still False
+        """
+        api_client.force_login(admin_user)
+
+        response = api_client.post(f"/api/reusable-blocks/{draft_block.pk}/unpublish/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["live"] is False
+        draft_block.refresh_from_db()
+        assert draft_block.live is False
+
+    @pytest.mark.django_db
+    def test_unpublish_unauthenticated_returns_403(self, api_client, live_block):
+        """POST /api/reusable-blocks/<id>/unpublish/ returns 403 without authentication.
+
+        Purpose: Verify that unauthenticated requests to the unpublish endpoint
+                 are rejected with 403, ensuring access control.
+        Type: Error
+        Technique: Authentication/authorization
+        Integration: POST /api/reusable-blocks/<id>/unpublish/ -> IsAuthenticated -> 403
+        Test data:
+        - 1 live block (accessed without authentication)
+        Scenario:
+        1. POST to /api/reusable-blocks/<id>/unpublish/ without login
+        2. Verify response is 403
+        """
+        response = api_client.post(f"/api/reusable-blocks/{live_block.pk}/unpublish/")
+
+        assert response.status_code == 403
+
+
+class TestDRFRenderEndpoint:
+    """DRF render action endpoint tests."""
+
+    @pytest.mark.django_db
+    def test_render_block_returns_html(self, api_client, admin_user, live_block):
+        """GET /api/reusable-blocks/<id>/render/ renders a block to HTML.
+
+        Purpose: Verify that the render endpoint returns HTML content for a
+                 block with content, confirming the ReusableBlock.render()
+                 integration works through the API layer.
+        Type: Normal
+        Technique: API endpoint
+        Integration: GET /api/reusable-blocks/<id>/render/ -> ReusableBlock.render -> Template -> Response
+        Test data:
+        - Admin user
+        - 1 block with live=True and rich_text content
+        Scenario:
+        1. Log in as admin
+        2. GET /api/reusable-blocks/<id>/render/
+        3. Verify response is 200 and contains 'html' key
+        """
+        api_client.force_login(admin_user)
+
+        response = api_client.get(f"/api/reusable-blocks/{live_block.pk}/render/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "html" in data
+
+    @pytest.mark.django_db
+    def test_render_unauthenticated_returns_403(self, api_client, live_block):
+        """GET /api/reusable-blocks/<id>/render/ returns 403 without authentication.
+
+        Purpose: Verify that unauthenticated requests to the render endpoint
+                 are rejected with 403, ensuring access control.
+        Type: Error
+        Technique: Authentication/authorization
+        Integration: GET /api/reusable-blocks/<id>/render/ -> IsAuthenticated -> 403
+        Test data:
+        - 1 live block (accessed without authentication)
+        Scenario:
+        1. GET /api/reusable-blocks/<id>/render/ without login
+        2. Verify response is 403
+        """
+        response = api_client.get(f"/api/reusable-blocks/{live_block.pk}/render/")
+
+        assert response.status_code == 403
