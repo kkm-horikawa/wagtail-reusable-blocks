@@ -29,7 +29,7 @@ class SlotChooserWidget {
         // Match only direct slot_id fields for THIS instance,
         // preventing parent from matching nested child fields
         const escapedPrefix = this.slotContentFieldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        this.directSlotPattern = new RegExp(`^${escapedPrefix}-\\d+-slot_id$`);
+        this.directSlotPattern = new RegExp(`^${escapedPrefix}-\\d+-value-slot_id$`);
 
         this.init();
     }
